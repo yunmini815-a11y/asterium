@@ -1630,14 +1630,32 @@ export function ChatInterface() {
   const [showAllQuickQueries, setShowAllQuickQueries] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [aiMode, setAiMode] = useState<"checking" | "online" | "offline">("checking")
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const shouldAutoScrollRef = useRef(true)
+  const hasInitializedMessagesRef = useRef(false)
   const activeTone = detectLoreTone(input)
   const activeToneMeta = getToneMeta(activeTone)
   const recommendedQueries = getRecommendedQueries(input)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    })
+  }
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    const distanceFromBottom =
+      container.scrollHeight - (container.scrollTop + container.clientHeight)
+    shouldAutoScrollRef.current = distanceFromBottom < 120
   }
 
   useEffect(() => {
@@ -1665,7 +1683,14 @@ export function ChatInterface() {
   }, [])
 
   useEffect(() => {
-    scrollToBottom()
+    if (!hasInitializedMessagesRef.current) {
+      hasInitializedMessagesRef.current = true
+      return
+    }
+
+    if (shouldAutoScrollRef.current) {
+      scrollToBottom("smooth")
+    }
   }, [messages])
 
   useEffect(() => {
@@ -1675,6 +1700,7 @@ export function ChatInterface() {
   const submitQuery = async (rawInput: string) => {
     const trimmedInput = rawInput.trim()
     if (!trimmedInput || isTyping) return
+    shouldAutoScrollRef.current = true
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -1781,6 +1807,7 @@ export function ChatInterface() {
   }
 
   const handleReset = () => {
+    shouldAutoScrollRef.current = true
     setMessages(getInitialMessages())
   }
 
@@ -1849,7 +1876,11 @@ export function ChatInterface() {
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-2.5 py-4 sm:px-6 sm:py-5">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+        className="flex-1 overflow-y-auto px-2.5 py-4 sm:px-6 sm:py-5"
+      >
         <div className="mx-auto max-w-4xl space-y-5 sm:space-y-6">
           {messages.map((message) => (
             (() => {

@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
 import { cn } from "@/lib/utils"
-import { Globe, Shield, Lock, FileText, Users, AlertTriangle } from "lucide-react"
+import { Globe, Shield, Lock, FileText, Users, AlertTriangle, Fingerprint } from "lucide-react"
 
 function WorldviewPanel() {
   const worldviewData = [
@@ -251,6 +251,7 @@ function ArchivePanel() {
 
   const [selectedDocId, setSelectedDocId] = useState(documents[0].id)
   const [revealedLineCount, setRevealedLineCount] = useState(0)
+  const detailPanelRef = useRef<HTMLElement>(null)
   const selectedDoc = documents.find((doc) => doc.id === selectedDocId) ?? documents[0]
 
   useEffect(() => {
@@ -293,7 +294,7 @@ function ArchivePanel() {
       </div>
 
       <div className="grid flex-1 gap-3 overflow-hidden lg:grid-cols-2">
-        <div className="space-y-3 overflow-y-auto pr-1">
+        <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:block lg:space-y-3 lg:overflow-y-auto lg:pr-1">
           {documents.map((doc) => {
             const isActive = selectedDocId === doc.id
 
@@ -301,14 +302,22 @@ function ArchivePanel() {
               <button
                 type="button"
                 key={doc.id}
-                onClick={() => setSelectedDocId(doc.id)}
-                className={`group w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${
+                onClick={() => {
+                  setSelectedDocId(doc.id)
+                  if (window.innerWidth < 1024) {
+                    detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }
+                }}
+                className={`group relative w-[84vw] shrink-0 cursor-pointer overflow-hidden rounded-xl border p-3 text-left transition-all sm:w-[68vw] lg:w-full lg:p-4 ${
                   isActive
-                    ? "border-primary/40 bg-primary/10"
+                    ? "border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25)]"
                     : "border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
                 }`}
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {doc.level === "기밀" && (
+                  <span className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-red-400/95 via-red-500/80 to-red-700/65" />
+                )}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:gap-3">
                   <div className="flex items-center gap-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                       <FileText className="h-4 w-4 text-primary" />
@@ -319,36 +328,43 @@ function ArchivePanel() {
                         <span
                           className={`rounded px-1.5 py-0.5 text-[10px] ${
                             doc.level === "기밀"
-                              ? "bg-red-500/10 text-red-400"
+                              ? "border border-red-400/45 bg-red-500/20 text-red-200"
                               : doc.level === "보통"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-secondary text-muted-foreground"
+                              ? "border border-sky-400/40 bg-sky-500/15 text-sky-200"
+                              : "border border-border/70 bg-secondary/70 text-foreground/85"
                           }`}
                         >
                           {doc.level}
                         </span>
                       </div>
-                      <p className="mt-0.5 text-sm text-foreground">{doc.title}</p>
+                      <p className="mt-0.5 line-clamp-1 text-sm text-foreground">{doc.title}</p>
+                      <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground lg:hidden">{doc.summary}</p>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground">{doc.date}</span>
                 </div>
+                {isActive && (
+                  <p className="mt-2 text-[10px] tracking-[0.14em] text-primary lg:hidden">SELECTED RECORD</p>
+                )}
               </button>
             )
           })}
         </div>
 
-        <article className="flex min-h-[260px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card/80">
+        <article ref={detailPanelRef} className="order-1 flex min-h-[300px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card/80 lg:order-2 lg:min-h-[260px]">
+          {selectedDoc.level === "기밀" && (
+            <div className="h-1 w-full bg-gradient-to-r from-red-500/85 via-red-400/70 to-transparent" />
+          )}
           <div className="border-b border-border/70 p-4">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-primary">{selectedDoc.id}</span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[10px] ${
                   selectedDoc.level === "기밀"
-                    ? "bg-red-500/10 text-red-400"
+                    ? "border border-red-400/45 bg-red-500/20 text-red-200"
                     : selectedDoc.level === "보통"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-secondary text-muted-foreground"
+                    ? "border border-sky-400/40 bg-sky-500/15 text-sky-200"
+                    : "border border-border/70 bg-secondary/70 text-foreground/85"
                 }`}
               >
                 {selectedDoc.level}
@@ -385,10 +401,76 @@ function ArchivePanel() {
 export default function Dashboard() {
   const [activeMenu, setActiveMenu] = useState("chat")
   const [introReady, setIntroReady] = useState(false)
+  const [booting, setBooting] = useState(true)
+  const [scanProgress, setScanProgress] = useState(0)
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setIntroReady(true))
-    return () => cancelAnimationFrame(raf)
+    let audioCtx: AudioContext | null = null
+    const milestonePlayed = new Set<number>()
+
+    const playTone = (frequency: number, durationMs: number, volume = 0.018) => {
+      try {
+        const AudioContextCtor: typeof AudioContext | undefined =
+          window.AudioContext ??
+          (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+
+        if (!AudioContextCtor) return
+        if (!audioCtx) audioCtx = new AudioContextCtor()
+        if (audioCtx.state === "suspended") {
+          void audioCtx.resume()
+        }
+
+        const oscillator = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
+
+        oscillator.type = "sine"
+        oscillator.frequency.value = frequency
+        gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + 0.01)
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + durationMs / 1000)
+
+        oscillator.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+
+        oscillator.start(audioCtx.currentTime)
+        oscillator.stop(audioCtx.currentTime + durationMs / 1000 + 0.01)
+      } catch {
+        // 모바일 자동재생 제한 등으로 실패해도 UI 흐름은 유지한다.
+      }
+    }
+
+    const durationMs = 1150
+    const tickMs = 30
+    let elapsed = 0
+
+    const timer = setInterval(() => {
+      elapsed += tickMs
+      const progress = Math.min(100, Math.round((elapsed / durationMs) * 100))
+      setScanProgress(progress)
+
+       const milestones = [25, 50, 75]
+       for (const milestone of milestones) {
+        if (progress >= milestone && !milestonePlayed.has(milestone)) {
+          milestonePlayed.add(milestone)
+          playTone(680 + milestone * 4, 55)
+        }
+      }
+
+      if (elapsed >= durationMs) {
+        clearInterval(timer)
+        playTone(1040, 80, 0.02)
+        setTimeout(() => playTone(1320, 120, 0.02), 90)
+        setBooting(false)
+        requestAnimationFrame(() => setIntroReady(true))
+      }
+    }, tickMs)
+
+    return () => {
+      clearInterval(timer)
+      if (audioCtx && audioCtx.state !== "closed") {
+        void audioCtx.close()
+      }
+    }
   }, [])
 
   const mobileMenuItems = [
@@ -413,6 +495,44 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full items-stretch p-2 sm:p-4">
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none fixed inset-0 z-40 transition-opacity duration-500",
+          booting ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 flex items-center justify-center px-6">
+          <div className="w-full max-w-xs rounded-2xl border border-primary/30 bg-card/85 p-5 shadow-2xl shadow-primary/20">
+            <p className="text-center text-[10px] tracking-[0.28em] text-muted-foreground">BIOMETRIC AUTH</p>
+            <div className="relative mx-auto mt-4 flex h-28 w-28 items-center justify-center rounded-full border border-primary/25 bg-primary/5">
+              <div className="absolute inset-2 rounded-full border border-primary/20" />
+              <Fingerprint className="h-12 w-12 text-primary/85" />
+              <span
+                className="absolute left-3 right-3 h-[2px] rounded-full bg-primary/80 shadow-[0_0_12px_rgba(56,189,248,0.55)] transition-all duration-150"
+                style={{ top: `${10 + scanProgress * 0.76}%` }}
+              />
+            </div>
+            <div className="mt-4">
+              <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-150"
+                  style={{ width: `${scanProgress}%` }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[10px] tracking-wider text-muted-foreground">
+                <span>SCAN</span>
+                <span>{scanProgress}%</span>
+              </div>
+              <p className="mt-2 text-center text-[10px] tracking-[0.18em] text-primary/90">
+                {scanProgress < 100 ? "FINGERPRINT VERIFYING" : "ACCESS GRANTED"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div
         className={cn(
           "subtle-grid pointer-events-none fixed inset-0 transition-opacity duration-700",
