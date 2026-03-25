@@ -4,11 +4,115 @@ import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Send, Sparkles, User, RotateCcw, Copy, Check } from "lucide-react"
 
+type MessageSource = "system" | "live-ai" | "fallback" | "pending"
+
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   timestamp: Date
+  source?: MessageSource
+}
+
+interface ApiMessage {
+  role: "user" | "assistant"
+  content: string
+}
+
+type LoreTone = "default" | "elmora" | "noktar" | "neutral"
+
+function detectLoreTone(text: string): LoreTone {
+  const lower = text.toLowerCase()
+
+  const forceNoktarKeys = ["소울", "soul", "어비스", "abyss", "a·b·s", "공멸무구"]
+  const forceNeutralKeys = ["플뤼겔", "중립지대", "회색지대", "안개지대", "gray zone"]
+
+  const elmoraKeys = [
+    "엘모라",
+    "에클리시아",
+    "인덱시리온",
+    "팬텀마이어",
+    "세인츠포드",
+    "프라가라흐",
+    "월식",
+    "서광",
+    "여명",
+    "명멸",
+    "황혼",
+    "샤텐라우그",
+  ]
+  const noktarKeys = [
+    "녹타르",
+    "네메시스",
+    "뤼네",
+    "소울",
+    "soul",
+    "어비스",
+    "abyss",
+    "a·b·s",
+    "공멸무구",
+    "호라이즌",
+    "에스카톤",
+    "암시장",
+    "불법경매장",
+    "명경",
+    "범죄",
+    "무법",
+  ]
+  const neutralKeys = ["플뤼겔", "중립지대", "회색지대", "바실라", "게이트", "마물"]
+
+  // SOUL/ABYSS는 설명에 엘모라 키워드가 섞여 있어도 녹타르 톤을 우선 적용한다.
+  if (forceNoktarKeys.some((key) => lower.includes(key))) return "noktar"
+  // 플뤼겔/회색지대는 본문에 엘모라가 함께 언급되어도 중립(보라) 톤을 우선 적용한다.
+  if (forceNeutralKeys.some((key) => lower.includes(key))) return "neutral"
+
+  if (elmoraKeys.some((key) => lower.includes(key))) return "elmora"
+  if (noktarKeys.some((key) => lower.includes(key))) return "noktar"
+  if (neutralKeys.some((key) => lower.includes(key))) return "neutral"
+  return "default"
+}
+
+function getToneMeta(tone: LoreTone) {
+  if (tone === "elmora") {
+    return {
+      label: "ELMORA // LUMEN PROTOCOL",
+      avatar: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-400/30",
+      bubble:
+        "rounded-tl-sm border-sky-400/40 bg-gradient-to-br from-sky-500/10 via-cyan-500/5 to-card/90 text-card-foreground shadow-[0_0_28px_rgba(56,189,248,0.12)]",
+      accent: "bg-sky-300/80",
+      time: "text-sky-200/70",
+    }
+  }
+
+  if (tone === "noktar") {
+    return {
+      label: "NOKTAR // SHADOW DOSSIER",
+      avatar: "bg-rose-500/15 text-rose-300 ring-1 ring-rose-400/30",
+      bubble:
+        "rounded-tl-sm border-rose-500/40 bg-gradient-to-br from-rose-500/12 via-amber-500/5 to-card/90 text-card-foreground shadow-[0_0_32px_rgba(244,63,94,0.14)]",
+      accent: "bg-rose-300/80",
+      time: "text-rose-200/70",
+    }
+  }
+
+  if (tone === "neutral") {
+    return {
+      label: "GRAY ZONE // FIELD LOG",
+      avatar: "bg-violet-500/15 text-violet-300 ring-1 ring-violet-400/30",
+      bubble:
+        "rounded-tl-sm border-violet-400/35 bg-gradient-to-br from-violet-500/10 via-indigo-500/5 to-card/90 text-card-foreground shadow-[0_0_26px_rgba(167,139,250,0.12)]",
+      accent: "bg-violet-300/80",
+      time: "text-violet-200/70",
+    }
+  }
+
+  return {
+    label: "AKASHIC // STANDARD",
+    avatar: "bg-primary/20 text-primary",
+    bubble: "rounded-tl-sm border-border/70 bg-card/80 text-card-foreground",
+    accent: "bg-primary/80",
+    time: "text-muted-foreground",
+  }
 }
 
 // 유스트리아 세계관 지식 베이스
@@ -24,6 +128,60 @@ const WORLD_KNOWLEDGE = {
     elmora: "엘모라(Elmora): 인베스티아를 계승한 도시국가로, 다양한 문화가 조화롭게 섞인 안전한 중심 도시입니다. 협회와 해결사들이 활동합니다.",
     noktar: "녹타르: 범죄도시이자 무법지대로, 네메시스와 뤼네 두 세력이 패권 전쟁을 벌이고 있습니다. 불분명한 힘으로 인해 소속원들의 힘이 강화되어 있습니다.",
     basila: "바실라: 마물지대로, 마물들이 점령한 위험 구역입니다."
+  },
+  detailedRegions: {
+    elmora: {
+      climate:
+        "엘모라는 온난 기후와 뚜렷한 사계절을 유지하며, 수도 에클리시아 중심의 대규모 마나 흐름이 기온 안정에 기여합니다.",
+      districts: [
+        "에클리시아(중앙): 월식협회 중심 수도. 샤텐라우그, 크리세우스, 에인라드, 그리폰 전투사관학교가 위치.",
+        "인덱시리온(동부): 서광 중심 권역. 대도서관 아반티르와 아르테미스 생텀이 대표 시설.",
+        "팬텀마이어(서부): 황혼 중심 권역. 플뤼겔 경계인 황혼선과 감시시설 더스크메어가 핵심.",
+        "세인츠포드(남부): 명멸 중심 권역. 칠성연합과 상공업 네트워크가 밀집.",
+        "프라가라흐(북부): 여명 중심 권역. 바실라 접경 결계 금실, 유물감정소 프레펜데르 운용.",
+      ],
+      systems: [
+        "행정구역별 협회는 고유 업무 외 출생/사망 신고, 경범죄 수사 등 기초 행정을 겸임.",
+        "워프게이트는 각 협회 인근 약 30m 지점에 위치하며 100엘라로 타 권역 이동 가능.",
+        "대표 교육기관: 그리폰 전투사관학교, 아르테미스 생텀.",
+      ],
+      schattenruge:
+        "샤텐라우그(만월을 가리는 눈)는 월식 옥상의 대형 마나 장치로, 평시 자기장을 전개하고 필요 시 월식령 발동 마나를 도시 전역으로 확산합니다.",
+    },
+    noktar: {
+      overview:
+        "녹타르는 공기 중 마나 특성으로 전반적으로 어두운 분위기를 띠며, 행정기관 대신 네메시스와 뤼네가 통제권을 분할합니다.",
+      horizon: [
+        "지상 호라이즌: 법과 질서가 약한 고위험 권역.",
+        "네메시스 본부: 중앙 거점 중심의 무기 보관/훈련/병력 양성 허브.",
+        "뤼네 본부: 위장 거점형 구조. 지하에 타뷸라 뤼네 관리 라인이 존재.",
+        "신상/묘지: 암묵적 불가침 관습이 남은 상징 지점.",
+      ],
+      eschaton: [
+        "지하 에스카톤: 지하 개발 이후 범죄 경제가 심화된 심층 권역.",
+        "암시장/카지노/불법경매장: 무기·폭발물·희귀 기물 거래의 핵심 축.",
+        "명경 본부(루머): 네메시스·뤼네 외 제3세력 가능성이 거론되는 비가시 조직 거점.",
+      ],
+    },
+    neutral: {
+      flugel:
+        "플뤼겔은 엘모라-녹타르 사이 회색 중립지대로, 양측이 직접 행정 개입을 자제하는 완충지대입니다.",
+      anomalies: [
+        "전역에 사라지지 않는 옅은 안개가 존재하며, 원인은 고밀도 대기 마나로 추정됩니다.",
+        "이능력 변형·폭주·강화 등 예측 불가 현상이 빈번합니다.",
+        "플뤼겔 호흡 자체가 제논 과부하를 유발할 수 있어 등급별 체류·제어 한계가 명확합니다.",
+      ],
+      limits:
+        "공식 원인은 비공개이며 수뇌부만 진실을 안다는 설이 지배적입니다. 유물·아티팩트 기원설은 검증되지 않았습니다.",
+    },
+    basila: {
+      overview:
+        "바실라는 게이트와 마물에 잠식된 땅으로, 인베스티아 멸망 이후 인류가 상실한 고위험 지대입니다.",
+      value:
+        "아티팩트와 유물, 마정석 등 고가치 보상이 존재해 엘모라·녹타르 모두 높은 관심을 보입니다.",
+      hazard:
+        "접경에서 멀어질수록 고위 마물이 증가하며, 직접 개입이 어려운 정치 지형 때문에 중립지대 이상으로 위험해질 수 있습니다.",
+    },
   },
   factions: {
     nemesis: "네메시스: 녹타르의 주요 범죄조직으로, '해방의 날'을 주도하여 체제를 전복시킨 세력입니다.",
@@ -290,7 +448,408 @@ const WORLD_KNOWLEDGE = {
       "칠성연합 — 명멸 산하 일곱 기관(천추건축 등), 도시 인프라.",
     ],
   },
+  resolver: {
+    oath: "월식의 가호 아래 명멸의 검을 휘두르고, 서광을 따라 여명과 황혼의 경계를 걸으리.",
+    overview:
+      "해결사는 엘모라에서 사건 해결, 마물 저지, 범죄자 척결을 수행하는 월식협회 공인 보안관입니다. 단순 용병이 아니라 도시 질서 수호를 위한 공적 서약을 짊어진 집단입니다.",
+    roles: [
+      "운영 유연성: 협회 정규 무력보다 빠른 현장 투입과 즉응 대응.",
+      "전문성 보완: 표준화 전력이 다루기 어려운 특이 사건 해결.",
+      "사회적 완충: 협회와 시민 사이의 신뢰 연결고리 역할.",
+    ],
+    grades: [
+      "가넷(견습): 해결사 입문 단계. 숙련자와 팀 단위 임무 수행.",
+      "앰버(정식): 독자 임무 수행 가능. 해결사 다수 분포 구간.",
+      "토파즈(숙련): 자기 노하우 확립. 마물지대 탐방 및 출세 구간.",
+      "사파이어(정예): 상위 5%. 잠입·장기 작전급 의뢰 담당.",
+      "오닉스(일류): 승급 시험 통과자. 도시 존망 임무 참여 가능.",
+      "마그눔오푸스(특급): 10명 내외. 단장급 발언권과 압도적 무력.",
+    ],
+    requestTiers: [
+      "속삭임: 작은 마을 혼란급. 보수 1천~3천 엘라.",
+      "소음: 도시 일부 위협급. 보수 1만 엘라 이상.",
+      "비명: 도시 대위험급. 보수 2만~4만 엘라.",
+      "불협화음: 도시 시스템 마비 가능급. 협회 간 합동 대응.",
+      "침묵: 월식 지정 최고 위험. 도시 최우선 제거 대상.",
+    ],
+    eclipseGear:
+      "이클립스 기어는 인증 해결사 전용 장치(시계형)로, 의뢰 조회/수주/공유/커뮤니티 기능을 제공합니다. 착용자 뇌파를 인식해 개인 홀로그램 인터페이스를 호출합니다.",
+    sevenUsurpers:
+      "칠요의 찬탈자는 앙그라마이뉴 토벌 7인을 기리기 위해 시작된, 월식이 해결사에게 부여하는 최고 명예 칭호입니다.",
+  },
+  nemesisDetail: {
+    intro:
+      "네메시스는 녹타르의 가장 오래된 조직으로, 창립자 마키엘 프라디우스와 카사 프리마의 계보를 잇는 세력입니다. 뤼네와 함께 양대산맥을 이룹니다.",
+    core:
+      "네메시스는 피라미드형 광물을 운용하며, 의식을 통해 힘을 각성합니다. 모래·혈흔·섭취 후 심상 세계에서 마나를 '납득'시켜야 하며, 의식을 마친 자들은 서로를 인지할 수 있습니다.",
+    hierarchy: [
+      "지도자(Causa Prima/군주) 2인: 조직 최고권력.",
+      "부지도자(Karmen/집정관) 3인: 지도자 직하의 부총책.",
+      "부서장/보좌관/요원 체계: 6개 부대, 3개 서단으로 분할 운용.",
+    ],
+    divisions: [
+      "제1서단 Ratio: 계획·시뮬레이션·선동·정보작전.",
+      "제2서단 Potentia: 군수·재정·마물 연구·마광석 활용.",
+      "제3서단 Actus: 전투·암살·사냥·의무지원.",
+    ],
+    mentorSystem:
+      "조직원은 멘토/멘티 체계로 운영되며, 입단 일수·연령·테스트·상위 승인에 따라 전환됩니다.",
+  },
+  ruinae: {
+    intro:
+      "뤼네(Ruinæ)는 약 30년 전 뤼네 J. 그레안더의 칙령 아래 녹타르에 자리 잡은 대형 조직으로, 네메시스와 함께 녹타르 양대 축으로 평가됩니다.",
+    slogan: "BLACK HAWK DO NOT BETRAY.",
+    doctrine: [
+      "Realize: 나는 뤼네 산하의 영예로운 직급임을 인지한다.",
+      "Understand: 뤼네의 명령이 곧 법칙이며, 질서 앞에서 입을 닫는다.",
+      "Inherit: 피로 이어진 명예와 불명예를 계승한다.",
+      "Never betray: 어떤 상황에서도 뤼네를 배신하지 않으며 배신자는 척결한다.",
+      "Act: 타뷸라 앞에서는 입보다 몸을 먼저 움직인다.",
+      "Erase: 뤼네에서의 삶이 끝나는 날 스스로 흔적을 지운다.",
+    ],
+    tabula:
+      "타뷸라 루이네는 S~E 6단계 임무 체계입니다. 일반 요원은 주당 최소 3회 수행 의무가 있으며, 등급별 차출 자단·휴가·임무 성격이 엄격히 갈립니다.",
+    hierarchy:
+      "최고위는 Header Ruinæ 2인, 보좌는 Header's servant 2인, 양육·육성 체계는 Mesia Ruinæ 2인으로 구성됩니다.",
+    squads:
+      "요원은 제1·제2·제3자단으로 나뉘며 연차·숙련도·승급 심사에 따라 이동합니다. 제1자단일수록 고위 임무와 혜택이 집중됩니다.",
+    eden:
+      "특수의술부대 에덴(EDEN)은 치료계 이능력자·의술사를 중심으로 운용되며, 수문장 Celest와 요원 Sylph 체계를 사용합니다.",
+  },
 }
+
+// 독립 조직: 공방 SOUL
+const SOUL_KNOWLEDGE = {
+  name: "공방 SOUL",
+  fullName: "SOUL · Clandestine Forge Network",
+  overview:
+    "공방 SOUL은 녹타르 지하의 비공개 단조 공방입니다. 뤼네와 독립적으로 운영되며, 고가치 의뢰자 대상 주문제작을 수행합니다.",
+  operator: "현 세대 단조자는 소니아 세르핀입니다.",
+  specialty:
+    "고대 기술과 마정석 융합 기술을 바탕으로 고위 능력자 전용 무구를 제작합니다. 단조 수준은 명멸협회의 엑시드에 필적합니다.",
+  location:
+    "녹타르 지하 깊숨한 곳에 위치하며, 접근 경로와 정체는 극도로 비밀입니다.",
+}
+
+// 독립 아티팩트: 어비스 · 공멸무구
+const ABYSS_KNOWLEDGE = {
+  name: "어비스 · A·B·S",
+  fullName: "Abyss · Annihilation Breakdown Singularity | A·B·S · 공멸무구",
+  overview:
+    "어비스는 공방 SOUL에서 단조되는 오리하르콘 기반 고내구 무구로, 고농도 마나와 마정석 융합 운용을 전제로 합니다.",
+  material:
+    "주 재료는 바실라에서 채굴 가능한 특수 광물 오리하르콘입니다. 마정석 융합으로 마물의 힘을 활용하거나 새로운 방식의 힘을 이끌어내는 것이 가능합니다.",
+  forms:
+    "검·화기·방어구·반지·팔찌·신체 일부 등으로 가공되며, 고위 능력자의 절대성을 견딜 수 있도록 특화 제작됩니다.",
+  requirement:
+    "사용자 잠재력·사상·명예 검증을 통과한 자에게만 단조됩니다. 이는 권력이나 치부로 취득 불가능한 영예의 상징입니다.",
+}
+
+// 간단 요약: 네메시스
+const NEMESIS_SIMPLE = {
+  name: "네메시스",
+  brief:
+    "녹타르의 가장 오래된 범죄조직. 창립자 마키엘 프라디우스와 카사 프리마의 계보를 잇는 세력으로, 뤼네와 함께 녹타르 양대 축을 이룹니다.",
+  founding:
+    "「해방의 날」을 주도하여 녹타르의 체제를 전복시킨 세력으로, 현재도 도시 절반의 통제권을 보유 중입니다.",
+}
+
+const TABULA_RUINAE_DETAILS = `Tabula Ruinae는 뤼네의 임무 분류 체계입니다.
+
+【운용 원칙】
+▸ 임무 단계: S ~ E
+▸ 기본 차출: 주당 최소 3회
+▸ 단계가 높을수록 소수 정예/고위직 동반 비율 상승
+
+【등급별 요약】
+
+S // 최고위 단일 발령권
+▸ 발령: 헤더 직명으로만 개시
+▸ 차출: 최소 1자단, 고위직 참여 사실상 필수
+▸ 보상: 2주 ~ 1달 휴가
+▸ 예시: 최고위 표적 암살, 대테러 핵심 작전
+
+A // 전략 타격 단계
+▸ 발령: 희소 발령, 단독 수행은 고위 역량자 한정
+▸ 차출: 최소 1자단
+▸ 보상: 1주 휴가
+▸ 예시: 준고위 표적 처분, 중규모 테러 작전, 회유 공작
+
+B // 고위험 전투 단계
+▸ 발령: 빈번한 실전 단계
+▸ 차출: 최소 2자단
+▸ 보상: 2일 휴가
+▸ 예시: 외부 조직 다수 암살, 국지 교전, 테러 후속 처리
+
+C // 실무 위험 단계
+▸ 발령: 주간 상시 편성
+▸ 차출: 최소 2자단
+▸ 보상: 휴가 없음
+▸ 예시: 정보 암행, 외부 잠입 출장, 접선/전서 임무
+
+D // 지원 운용 단계
+▸ 발령: 일일 고정 편성
+▸ 차출: 최소 3자단
+▸ 보상: 휴가 없음
+▸ 예시: 테러 시뮬레이션 보조, 함정 점검, 군수 조달
+
+E // 기초 집행 단계
+▸ 발령: 일일 고정 편성
+▸ 차출: 최소 3자단
+▸ 보상: 휴가 없음
+▸ 예시: 사전 설치, 물밑 거래, 현장 세팅 및 잡무`
+
+const MANA_SYSTEM_GUIDE = `## 1. 마나와 제논
+
+인간에게는 좌뇌에 마나를 사용할 수 있도록 하는 기관 "제논"이 존재합니다.
+
+신체기관으로서 유전의 영향을 받으나, 이는 개인의 편차에 따라 다른 양상을 보입니다. 이능력을 사용한다는 것은 기본적으로 제논을 이용해 마나를 몸 밖으로 방출하고 구현하는 행위를 뜻합니다. 제논은 제2의 심장이라는 명칭으로도 불립니다.
+
+이능력을 반복적으로 쉼 없이 오랜 시간 사용하거나, 자신의 한계를 뛰어넘는 이능력을 억지로 사용하는 등 제논을 혹사시키는 행위를 반복하면 제논이 손상될 수 있습니다. 이를 "제논의 과부하"라고 하며, 옅은 어지럼증부터 기절, 혼수상태까지 다양한 형태로 증상이 나타납니다. 대기 중 고밀도의 마나에 노출된 채 숨을 쉬는 행위만으로도 제논은 마나를 받아들이기에 과부하 위험이 존재합니다. 마나 사용자 등급이 높다는 것은 제논이 받아들이고 버틸 수 있는 마나 농도와 한계치가 하위 등급보다 높음을 의미합니다.
+
+제논이 손상되었을 때의 기본 해결법은 제논 사용을 중단하고 회복 시간을 확보하는 것입니다. 손상 상태에서 재사용을 시도하면 마나 운용이 불안정해 어떤 결과를 초래할지 예측할 수 없으며, 회복 기간이 기하급수적으로 늘어날 수 있습니다. 회복 기간은 손상 수준에 따라 상이합니다.
+
+마나는 선천적으로 각 개인마다 고유하며, 사회적으로는 지문처럼 개인을 상징하고 입증하는 식별값으로 취급됩니다.
+
+## 2. 마나와 이능력
+
+먼 과거부터 인간에게 주어진 이능력은 시간이 지남에 따라 여러 갈래로 발전했습니다. 그러나 이능력은 모든 인간마다 타고나는 요소이기에 통제가 이루어지지 않을 때 발생하는 문제가 지속되었고, 시대와 집단을 막론하고 통제 필요성이 제기되었습니다. 이에 따라 인류는 시대와 사회에 맞는 서로 다른 방식의 통제를 시행해 왔습니다.
+
+엘모라는 인베스티아를 계승한 도시로서, 인베스티아의 통제 체계를 이어받아 이능력의 절대적인 위력을 나누는 단위인 "절대성"을 도입했습니다. 엘모라에서는 만 14세 이상을 대상으로 서광협회 주관의 위력 시험을 진행합니다.
+
+## 3. 절대성
+
+절대성은 아래 기준으로 총 10단계로 분류됩니다.
+- 마나로 구현된 이능력이 자신의 신체를 얼마나 강화할 수 있는가
+- 마나로 구현된 이능력이 최대 어느 정도 수준의 피해를 입힐 수 있는가
+- 마나로 구현된 이능력이 전장에 얼마나 영향을 미칠 수 있는가
+- 마나로 구현된 이능력을 어느 수준까지 다룰 수 있는가
+- 마나 자체를 이용해 어떤 효과를 낼 수 있는가 (신체강화, 공격 등)
+
+절대성 1: 가벼운 갑옷이나 방패를 뚫는 위력 수준
+절대성 2: 얇은 콘크리트 벽에 균열을 내는 위력 수준
+절대성 3: 석조 벽에 균열을 내는 위력 수준
+절대성 4: 작은 건물 내부 절반을 파괴하는 위력 수준
+절대성 5: 단층 건물을 완전 붕괴시키는 위력 수준
+절대성 6: 철근 콘크리트 구조를 붕괴시키는 위력 수준
+절대성 7: 작은 건물 여러 채를 파괴하는 위력 수준
+절대성 8: 일부 대형 구조물을 파괴하는 위력 수준
+절대성 9: 대형 철근 콘크리트 7층 건물 1동을 심각 붕괴시키는 위력 수준
+절대성 10: 강화 콘크리트 기반 대형 공공시설 및 요새화 건물을 완전 붕괴시키는 위력 수준
+
+## 4. 마나 사용자 등급 제도
+
+마나 사용자 등급 제도는 서광협회가 엘모라의 모든 마나 사용자를 대상으로 전투력을 측정해 부여하는 분류 체계입니다.
+
+등급은 총 10가지로 나뉘며, 같은 등급 내에서도 절대성 차이로 위력 편차가 존재합니다.
+
+## 5. 등급
+
+I. Mono (모노)
+- 허용 최대 절대성: 1
+- 상시 1배, 최대 2배 신체강화
+- 역량심사 불필요
+
+II. Dio (디오)
+- 허용 최대 절대성: 2
+- 상시 2배, 최대 4배 신체강화
+- 역량심사 불필요
+
+III. Tria (트리아)
+- 허용 최대 절대성: 3
+- 상시 3배, 최대 5배 신체강화
+- 역량심사 불필요
+
+IV. Tetra (테트라)
+- 허용 최대 절대성: 4
+- 상시 3배, 최대 6배 신체강화
+- 역량심사 불필요
+
+V. Pende (펜데)
+- 허용 최대 절대성: 5
+- 상시 4배, 최대 7배 신체강화
+- 역량심사 불필요
+
+VI. Exi (엑시)
+- 허용 최대 절대성: 6
+- 상시 4배, 최대 8배 신체강화
+- 준고위직 역량심사 필요
+
+VII. Hepta (헤프타)
+- 허용 최대 절대성: 7
+- 상시 5배, 최대 10배 신체강화
+- 준고위직 역량심사 필요
+
+VIII. Oktane (옥테인)
+- 허용 최대 절대성: 8
+- 상시 6배, 최대 12배 신체강화
+- 고위직 역량심사 필요
+
+IX. Ennea (엔네아)
+- 허용 최대 절대성: 9
+- 상시 7배, 최대 14배 신체강화
+- 고위직 역량심사 필요
+
+X. Deka (데카)
+- 허용 최대 절대성: 10
+- 상시 8배, 최대 16배 신체강화
+- 최고위직 역량심사 필요`
+
+const MANA_SYSTEM_SUMMARY = `마나와 이능력 체계는 제논, 절대성, 마나 사용자 등급 제도로 구성됩니다.
+
+빠르게 확인할 수 있는 세부 항목은 아래와 같습니다.
+
+▸ 제논 - 마나 운용 기관과 과부하
+▸ 절대성 - 위력 측정 기준 1~10
+▸ 마나 사용자 등급 제도 - 측정 방식과 운영 기준
+▸ 마나 사용자 등급 - Mono ~ Deka 등급표
+▸ 마나 상세 - 전체 브리핑`
+
+const XENON_GUIDE = `【마나와 제논】
+
+인간에게는 좌뇌에 마나를 사용할 수 있도록 하는 기관 "제논"이 존재합니다.
+
+이능력을 사용한다는 것은 기본적으로 제논을 이용해 마나를 몸 밖으로 방출하고 구현하는 행위를 뜻합니다. 제논은 제2의 심장이라는 명칭으로도 불립니다.
+
+이능력을 반복적으로 사용하거나 한계를 넘는 출력을 강제로 운용하면 제논이 손상될 수 있습니다. 이를 "제논의 과부하"라고 하며, 옅은 어지럼증부터 기절, 혼수상태까지 다양한 증상이 발생합니다.
+
+대기 중 고밀도의 마나에 노출된 채 숨을 쉬는 것만으로도 제논은 영향을 받을 수 있으며, 상위 등급일수록 받아들이고 버틸 수 있는 마나 농도 한계가 높습니다.
+
+제논이 손상되었을 때는 사용을 중단하고 회복 시간을 확보해야 합니다. 손상 상태에서 재사용을 시도하면 마나 운용 불안정으로 인해 회복 기간이 크게 늘어날 수 있습니다.
+
+마나는 개인마다 고유하며, 사회적으로는 지문처럼 자신을 입증하는 식별값으로 취급됩니다.`
+
+const ABSOLUTENESS_GUIDE = `【절대성】
+
+절대성은 이능력의 절대적 위력을 측정하는 10단계 기준입니다.
+
+판단 기준:
+▸ 신체 강화 폭
+▸ 최대 피해량
+▸ 전장 영향력
+▸ 운용 숙련도
+▸ 마나 자체 활용 효과
+
+절대성 1: 가벼운 갑옷/방패를 뚫는 수준
+절대성 2: 얇은 콘크리트 벽 균열 수준
+절대성 3: 석조 벽 균열 수준
+절대성 4: 작은 건물 내부 절반 파괴 수준
+절대성 5: 단층 건물 완전 붕괴 수준
+절대성 6: 철근 콘크리트 구조 붕괴 수준
+절대성 7: 작은 건물 여러 채 파괴 수준
+절대성 8: 일부 대형 구조물 파괴 수준
+절대성 9: 대형 철근 콘크리트 7층 건물 1동 심각 붕괴 수준
+절대성 10: 강화 콘크리트 기반 대형 공공시설 및 요새화 건물 완전 붕괴 수준`
+
+const MANA_RANK_SYSTEM_GUIDE = `【마나 사용자 등급 제도】
+
+마나 사용자 등급 제도는 서광협회가 엘모라의 모든 마나 사용자를 대상으로 전투력을 측정해 부여하는 분류 체계입니다.
+
+인베스티아에서 이어진 통제 체계를 계승해, 엘모라는 절대성 기준과 함께 만 14세 이상 인간을 대상으로 위력 시험을 시행합니다.
+
+등급은 총 10가지이며, 같은 등급 안에서도 절대성 차이로 위력 편차가 존재합니다.`
+
+const MANA_RANKS_GUIDE = `【마나 사용자 등급】
+
+I. Mono (모노)
+▸ 허용 최대 절대성: 1
+▸ 상시 1배, 최대 2배 신체강화
+▸ 역량심사 불필요
+
+II. Dio (디오)
+▸ 허용 최대 절대성: 2
+▸ 상시 2배, 최대 4배 신체강화
+▸ 역량심사 불필요
+
+III. Tria (트리아)
+▸ 허용 최대 절대성: 3
+▸ 상시 3배, 최대 5배 신체강화
+▸ 역량심사 불필요
+
+IV. Tetra (테트라)
+▸ 허용 최대 절대성: 4
+▸ 상시 3배, 최대 6배 신체강화
+▸ 역량심사 불필요
+
+V. Pende (펜데)
+▸ 허용 최대 절대성: 5
+▸ 상시 4배, 최대 7배 신체강화
+▸ 역량심사 불필요
+
+VI. Exi (엑시)
+▸ 허용 최대 절대성: 6
+▸ 상시 4배, 최대 8배 신체강화
+▸ 준고위직 역량심사 필요
+
+VII. Hepta (헤프타)
+▸ 허용 최대 절대성: 7
+▸ 상시 5배, 최대 10배 신체강화
+▸ 준고위직 역량심사 필요
+
+VIII. Oktane (옥테인)
+▸ 허용 최대 절대성: 8
+▸ 상시 6배, 최대 12배 신체강화
+▸ 고위직 역량심사 필요
+
+IX. Ennea (엔네아)
+▸ 허용 최대 절대성: 9
+▸ 상시 7배, 최대 14배 신체강화
+▸ 고위직 역량심사 필요
+
+X. Deka (데카)
+▸ 허용 최대 절대성: 10
+▸ 상시 8배, 최대 16배 신체강화
+▸ 최고위직 역량심사 필요`
+
+const SEARCH_MANUAL = `검색이 막막하실 때는 아래 키워드부터 바로 입력하시면 됩니다.
+
+【빠른 시작】
+▸ 도움말
+▸ 메뉴얼
+▸ 예시
+▸ 협회 목록
+
+【지역】
+▸ 엘모라 / 엘모라 상세
+▸ 녹타르 / 녹타르 상세
+▸ 플뤼겔
+▸ 바실라
+
+【세력 / 조직】
+▸ 네메시스 / 네메시스 상세
+▸ 뤼네 / 뤼네 상세
+▸ 황혼 / 서광 / 여명 / 명멸 / 월식
+▸ 공방 SOUL
+▸ 어비스
+
+【뤼네 세부】
+▸ 파타르키아 뤼네
+▸ 타뷸라 뤼네
+▸ 뤼네 EDEN
+
+【마나 / 이능력】
+▸ 마나
+▸ 마나 상세
+▸ 제논
+▸ 절대성
+▸ 마나 사용자 등급 제도
+▸ 마나 사용자 등급
+
+【기록 / 시스템】
+▸ 서고
+▸ 백서
+▸ 광원
+▸ 열람 등급
+▸ 화폐
+▸ 월식령
+
+【추천 예시】
+▸ "엘모라 상세"
+▸ "네메시스 상세"
+▸ "타뷸라 뤼네"
+▸ "절대성"
+▸ "마나 사용자 등급"
+▸ "협회 목록"`
 
 // 키워드 기반 응답 생성
 function generateContextualResponse(userInput: string): string {
@@ -298,6 +857,251 @@ function generateContextualResponse(userInput: string): string {
   const m = WORLD_KNOWLEDGE.myungmyeol
   const y = WORLD_KNOWLEDGE.yeomyeong
   const assocIdx = WORLD_KNOWLEDGE.associationIndex
+  const resolver = WORLD_KNOWLEDGE.resolver
+  const nemesisDetail = WORLD_KNOWLEDGE.nemesisDetail
+  const ruinae = WORLD_KNOWLEDGE.ruinae
+  const detailedRegions = WORLD_KNOWLEDGE.detailedRegions
+  const soul = SOUL_KNOWLEDGE
+  const abyss = ABYSS_KNOWLEDGE
+  const nemesisSimple = NEMESIS_SIMPLE
+
+  const isProvocativeInput =
+    input.includes("바보") ||
+    input.includes("멍청") ||
+    input.includes("stupid") ||
+    input.includes("idiot")
+
+  if (isProvocativeInput) {
+    return `[아카식레코드: 감정 안정 프로토콜]
+
+요원님의 발언은 기록되었습니다. 모욕적 언행은 협회 표준 커뮤니케이션 규약 제3조에 따라 감점 대상이 될 수 있습니다.
+
+원하신다면 임무 브리핑 모드로 전환하여,
+지금 가장 궁금한 주제를 즉시 정리해드리겠습니다.
+
+예시: 「월식령 43초 공백 요약해줘」`
+  }
+
+  const wantsSearchManual =
+    input.includes("도움말") ||
+    input.includes("메뉴얼") ||
+    input.includes("매뉴얼") ||
+    input.includes("검색어") ||
+    input.includes("예시") ||
+    input.includes("어떻게 검색") ||
+    input.includes("뭘 검색")
+
+  if (wantsSearchManual) {
+    return `[아카식레코드: 검색 메뉴얼]\n\n${SEARCH_MANUAL}`
+  }
+
+  const wantsManaGuideDetail =
+    input.includes("마나 상세") ||
+    input.includes("마나와 이능력 상세") ||
+    input.includes("마나 전체")
+
+  const wantsManaXenon =
+    input.includes("마나와 제논") ||
+    input.includes("제논") ||
+    input.includes("제논 과부하")
+
+  const wantsManaAbsoluteness =
+    input.includes("절대성") ||
+    input.includes("절대성 1") ||
+    input.includes("절대성 10")
+
+  const wantsManaRankSystem =
+    input.includes("마나 사용자 등급 제도") ||
+    input.includes("등급 제도") ||
+    input.includes("역량심사")
+
+  const wantsManaRanks =
+    input.includes("마나 사용자 등급") ||
+    input.includes("마나 등급") ||
+    input.includes("등급표") ||
+    input.includes("모노") ||
+    input.includes("디오") ||
+    input.includes("트리아") ||
+    input.includes("테트라") ||
+    input.includes("펜데") ||
+    input.includes("엑시") ||
+    input.includes("헤프타") ||
+    input.includes("옥테인") ||
+    input.includes("엔네아") ||
+    input.includes("데카")
+
+  const wantsManaSystemGuide =
+    input.includes("마나와 제논") ||
+    input.includes("마나와 이능력") ||
+    input.includes("마나 사용자 등급") ||
+    input.includes("마나 사용자 등급 제도") ||
+    input.includes("제논") ||
+    input.includes("절대성") ||
+    input.includes("모노") ||
+    input.includes("디오") ||
+    input.includes("트리아") ||
+    input.includes("테트라") ||
+    input.includes("펜데") ||
+    input.includes("엑시") ||
+    input.includes("헤프타") ||
+    input.includes("옥테인") ||
+    input.includes("엔네아") ||
+    input.includes("데카")
+
+  const wantsManaSystemSummary = input.includes("마나") && !wantsManaGuideDetail && !wantsManaXenon && !wantsManaAbsoluteness && !wantsManaRankSystem && !wantsManaRanks
+
+  if (wantsManaGuideDetail) {
+    return `[아카식레코드: 마나와 이능력 상세 브리핑]\n\n${MANA_SYSTEM_GUIDE}`
+  }
+
+  if (wantsManaXenon) {
+    return `[아카식레코드: 제논 · 마나 운용 기관]\n\n${XENON_GUIDE}`
+  }
+
+  if (wantsManaAbsoluteness) {
+    return `[아카식레코드: 절대성 기준표]\n\n${ABSOLUTENESS_GUIDE}`
+  }
+
+  if (wantsManaRankSystem) {
+    return `[아카식레코드: 마나 사용자 등급 제도]\n\n${MANA_RANK_SYSTEM_GUIDE}`
+  }
+
+  if (wantsManaRanks) {
+    return `[아카식레코드: 마나 사용자 등급표]\n\n${MANA_RANKS_GUIDE}`
+  }
+
+  if (wantsManaSystemSummary) {
+    return `[아카식레코드: 마나와 이능력 요약]\n\n${MANA_SYSTEM_SUMMARY}`
+  }
+
+  if (wantsManaSystemGuide) {
+    return `[아카식레코드: 마나와 이능력 브리핑]\n\n${MANA_SYSTEM_GUIDE}`
+  }
+
+  const wantsResolver =
+    input.includes("해결사") ||
+    input.includes("가넷") ||
+    input.includes("앰버") ||
+    input.includes("토파즈") ||
+    input.includes("사파이어") ||
+    input.includes("오닉스") ||
+    input.includes("마그눔오푸스") ||
+    input.includes("의뢰 등급") ||
+    input.includes("속삭임") ||
+    input.includes("소음") ||
+    input.includes("비명") ||
+    input.includes("불협화음") ||
+    input.includes("침묵") ||
+    input.includes("이클립스 기어") ||
+    input.includes("칠요의 찬탈자")
+
+  if (wantsResolver) {
+    return `[아카식레코드: 해결사 브리핑]\n\n"${resolver.oath}"\n\n${resolver.overview}\n\n【운용 목적】\n${resolver.roles.map((line) => `▸ ${line}`).join("\n")}\n\n【보석 등급】\n${resolver.grades.map((line) => `▸ ${line}`).join("\n")}\n\n【의뢰 위험도】\n${resolver.requestTiers.map((line) => `▸ ${line}`).join("\n")}\n\n【이클립스 기어】\n${resolver.eclipseGear}\n\n【최고 칭호】\n${resolver.sevenUsurpers}`
+  }
+
+  const wantsNemesisDeep =
+    input.includes("네메시스 상세") ||
+    input.includes("네메시스 전체") ||
+    input.includes("네메시스 조직") ||
+    input.includes("마키엘") ||
+    input.includes("카사 프리마") ||
+    input.includes("causa prima") ||
+    input.includes("카르멘") ||
+    input.includes("집정관") ||
+    input.includes("ratio") ||
+    input.includes("potentia") ||
+    input.includes("actus") ||
+    input.includes("멘토") ||
+    input.includes("멘티") ||
+    input.includes("피라미드") ||
+    input.includes("의식")
+
+  const wantsNemesisSimple = input.includes("네메시스") && !wantsNemesisDeep
+
+  if (wantsNemesisDeep) {
+    return `[아카식레코드: 네메시스 · 전체 기록]\n\n${nemesisDetail.intro}\n\n【핵심 전력 메커니즘】\n${nemesisDetail.core}\n\n【조직 위계】\n${nemesisDetail.hierarchy.map((line) => `▸ ${line}`).join("\n")}\n\n【3개 서단】\n${nemesisDetail.divisions.map((line) => `▸ ${line}`).join("\n")}\n\n【인사 체계】\n${nemesisDetail.mentorSystem}\n\n필요 시 항목별 상세 질의: 「네메시스 조직도 상세」, 「피라미드 의식 절차」, 「멘토/멘티 전환 조건」`
+  }
+
+  if (wantsNemesisSimple) {
+    return `[아카식레코드: 네메시스 · 녹타르 양대축]\n\n${nemesisSimple.name}\n\n${nemesisSimple.brief}\n\n${nemesisSimple.founding}\n\n전체 기록은 「네메시스 상세」로 요청하세요.`
+  }
+
+  const wantsRuinaeLore =
+    input.includes("뤼네") ||
+    input.includes("ruinae") ||
+    input.includes("black hawk") ||
+    input.includes("peitharchia") ||
+    input.includes("realize") ||
+    input.includes("never betray") ||
+    input.includes("tabula") ||
+    input.includes("자단") ||
+    input.includes("header ruin") ||
+    input.includes("mesia") ||
+    input.includes("에덴") ||
+    input.includes("eden") ||
+    input.includes("tabula")
+
+  const wantsRuinaeFull =
+    input.includes("뤼네 상세") ||
+    input.includes("뤼네 전체") ||
+    input.includes("뤼네 조직") ||
+    input.includes("black hawk")
+
+  const wantsRuinaeDoctrine =
+    input.includes("파타르키아 뤼네") ||
+    input.includes("파타르키아") ||
+    input.includes("뤼네 규율") ||
+    input.includes("peitharchia") ||
+    input.includes("never betray") ||
+    input.includes("realize") ||
+    input.includes("understand") ||
+    input.includes("inherit") ||
+    input.includes("act") ||
+    input.includes("erase")
+
+  const wantsRuinaeTabula =
+    input.includes("타뷸라") ||
+    input.includes("타뷸라 뤼네") ||
+    input.includes("타뷸라뤼네") ||
+    input.includes("tabula ruinae") ||
+    input.includes("s~e")
+
+  const wantsSoul =
+    input.includes("공방 SOUL") ||
+    input.includes("공방 소울") ||
+    input.includes("soul") ||
+    input.includes("소울") ||
+    (input.includes("소니아") && input.includes("세르핀"))
+
+  const wantsAbyss =
+    input.includes("어비스") ||
+    input.includes("abyss") ||
+    input.includes("공멸무구") ||
+    input.includes("a·b·s")
+
+  if (wantsSoul) {
+    return `[아카식레코드: 공방 SOUL]\n\n${soul.fullName}\n\n${soul.overview}\n\n【운영자】\n${soul.operator}\n\n【특화 분야】\n${soul.specialty}\n\n【위치】\n${soul.location}`
+  }
+
+  if (wantsAbyss) {
+    return `[아카식레코드: 어비스 · 공멸무구]\n\n${abyss.fullName}\n\n${abyss.overview}\n\n【재료】\n${abyss.material}\n\n【형태】\n${abyss.forms}\n\n【제작 요건】\n${abyss.requirement}`
+  }
+
+  if (wantsRuinaeDoctrine) {
+    return `[아카식레코드: 파타르키아 뤼네 · Peitharchia Ruinæ]\n\n【조직 표어】\n${ruinae.slogan}\n\n【6규율】\n${ruinae.doctrine.map((line) => `▸ ${line}`).join("\n")}\n\n규율 이행 상태와 처벌 기준이 필요하면 「뤼네 상세」로 조회하십시오.`
+  }
+
+  if (wantsRuinaeTabula) {
+    return `[아카식레코드: 타뷸라 뤼네 · Tabula Ruinæ]\n\n${TABULA_RUINAE_DETAILS}`
+  }
+
+  if (wantsRuinaeFull) {
+    return `[아카식레코드: 뤼네 · 전체 기록]\n\n${ruinae.intro}\n\n【조직 표어】\n${ruinae.slogan}\n\n【Peitharchia Ruinæ (6규율)】\n${ruinae.doctrine.map((line) => `▸ ${line}`).join("\n")}\n\n【Tabula Ruinæ】\n${ruinae.tabula}\n\n【조직도】\n${ruinae.hierarchy}\n\n【부대 체계】\n${ruinae.squads}\n\n【특수의술부대 EDEN】\n${ruinae.eden}`
+  }
+
+  if (wantsRuinaeLore) {
+    return `[아카식레코드: 뤼네 · 녹타르 양대축]\n\n${ruinae.intro}\n\n${ruinae.slogan}\n\n전체 기록은 「뤼네 상세」로 요청하시거나, 특정 항목을 문의하세요.\n\n▸ 「파타르키아 뤼네」 - Peitharchia Ruinæ\n▸ 「뤼네 EDEN」 - 특수의술부대\n▸ 「타뷸라 뤼네」 - 임무 단계 S~E 기준`
+  }
 
   const wantsAssociationIndex =
     input.includes("협회 목록") ||
@@ -402,6 +1206,81 @@ function generateContextualResponse(userInput: string): string {
 
   if (wantsAssociationIndex) {
     return `[아카식레코드: 협회 · 기관 색인]\n\n${assocIdx.intro}\n\n${assocIdx.lines.map((line) => `▸ ${line}`).join("\n")}`
+  }
+
+  const wantsElmoraDetail =
+    input.includes("엘모라 상세") ||
+    input.includes("엘모라 세부") ||
+    input.includes("엘모라 지역") ||
+    input.includes("에클리시아") ||
+    input.includes("인덱시리온") ||
+    input.includes("팬텀마이어") ||
+    input.includes("세인츠포드") ||
+    input.includes("프라가라흐") ||
+    input.includes("샤텐라우그") ||
+    input.includes("크리세우스") ||
+    input.includes("에인라드") ||
+    input.includes("아반티르") ||
+    input.includes("아르테미스 생텀") ||
+    input.includes("워프게이트")
+
+  const wantsElmoraSimple = input.includes("엘모라") && !wantsElmoraDetail
+
+  if (wantsElmoraDetail) {
+    const e = detailedRegions.elmora
+    return `[아카식레코드: 엘모라 세부 지역 브리핑]\n\nLUMEN/ELMORA REPORT // 도시 질서·행정 기준 문서\n\n${e.climate}\n\n【5개 행정구역】\n${e.districts.map((line) => `▸ ${line}`).join("\n")}\n\n【도시 운영 체계】\n${e.systems.map((line) => `▸ ${line}`).join("\n")}\n\n【핵심 장치】\n${e.schattenruge}`
+  }
+
+  if (wantsElmoraSimple) {
+    return `[아카식레코드: 엘모라 요약]\n\n${WORLD_KNOWLEDGE.regions.elmora}\n\n세부 기록은 아래 키워드로 조회 가능합니다.\n\n▸ 엘모라 상세\n▸ 에클리시아\n▸ 워프게이트\n▸ 샤텐라우그`
+  }
+
+  const wantsNoktarDetail =
+    input.includes("녹타르 상세") ||
+    input.includes("녹타르 세부") ||
+    input.includes("녹타르 지역") ||
+    input.includes("호라이즌") ||
+    input.includes("에스카톤") ||
+    input.includes("암시장") ||
+    input.includes("카지노") ||
+    input.includes("불법경매장") ||
+    input.includes("명경") ||
+    input.includes("신상") ||
+    input.includes("묘지")
+
+  const wantsNoktarSimple = input.includes("녹타르") && !wantsNoktarDetail
+
+  if (wantsNoktarDetail) {
+    const n = detailedRegions.noktar
+    return `[아카식레코드: 녹타르 세부 지역 브리핑]\n\nSHADOW/NOKTAR DOSSIER // 현장 침투·생존 기준 문서\n\n${n.overview}\n\n【지상 『호라이즌』】\n${n.horizon.map((line) => `▸ ${line}`).join("\n")}\n\n【지하 『에스카톤』】\n${n.eschaton.map((line) => `▸ ${line}`).join("\n")}`
+  }
+
+  if (wantsNoktarSimple) {
+    return `[아카식레코드: 녹타르 요약]\n\n${WORLD_KNOWLEDGE.regions.noktar}\n\n세부 기록은 아래 키워드로 조회 가능합니다.\n\n▸ 녹타르 상세\n▸ 호라이즌\n▸ 에스카톤\n▸ 암시장`
+  }
+
+  const wantsNeutralDetail =
+    input.includes("중립지대") ||
+    input.includes("플뤼겔") ||
+    input.includes("회색지대") ||
+    input.includes("안개지대") ||
+    input.includes("제논 과부하") ||
+    input.includes("제논")
+
+  if (wantsNeutralDetail) {
+    const z = detailedRegions.neutral
+    return `[아카식레코드: 중립지대 『플뤼겔』 브리핑]\n\n${z.flugel}\n\n【핵심 이상현상】\n${z.anomalies.map((line) => `▸ ${line}`).join("\n")}\n\n【공식 결론 상태】\n${z.limits}`
+  }
+
+  const wantsBasilaDetail =
+    input.includes("바실라") ||
+    input.includes("유물") ||
+    input.includes("인베스티아") ||
+    input.includes("마물지대")
+
+  if (wantsBasilaDetail) {
+    const b = detailedRegions.basila
+    return `[아카식레코드: 바실라 브리핑]\n\n${b.overview}\n\n【전략 가치】\n${b.value}\n\n【위험도】\n${b.hazard}`
   }
 
   // 서광협회 관련
@@ -544,9 +1423,9 @@ function generateContextualResponse(userInput: string): string {
   
   // 기본 응답
   const defaultResponses = [
-    "요청하신 정보를 아카식레코드에서 검색 중입니다.\n\n현재 유스트리아력 266년, 엘모라 협회는 범죄도시 녹타르와의 전쟁을 수행 중입니다. 필요하신 특정 정보가 있으시면 말씀해 주십시오.\n\n▸ 세계관/역사 정보\n▸ 지역 정보 (엘모라, 녹타르, 바실라)\n▸ 세력 정보 (협회, 네메시스, 뤼네)\n▸ 마물 및 게이트 관련 정보",
-    "아카식레코드가 관련 기록을 분석하고 있습니다.\n\n현재 대륙 상황은 삼분된 세력 간의 긴장 상태입니다. 엘모라 협회 소속 요원으로서 임무 수행에 필요한 정보를 제공해 드릴 수 있습니다.\n\n무엇을 더 알고 싶으십니까?",
-    "협회 데이터베이스 접근이 승인되었습니다.\n\n유스트리아 대륙의 모든 기록이 아카식레코드에 저장되어 있습니다. 역사, 지역, 세력, 이능력, 마물 등 원하시는 정보를 요청해 주십시오."
+    "요청하신 정보를 아카식레코드에서 검색 중입니다.\n\n현재 유스트리아력 266년, 엘모라 협회는 범죄도시 녹타르와의 전쟁을 수행 중입니다. 필요하신 특정 정보가 있으시면 말씀해 주십시오.\n\n막막하시면 「도움말」 또는 「메뉴얼」로 검색 가이드를 먼저 열어보십시오.",
+    "아카식레코드가 관련 기록을 분석하고 있습니다.\n\n현재 대륙 상황은 삼분된 세력 간의 긴장 상태입니다. 엘모라 협회 소속 요원으로서 임무 수행에 필요한 정보를 제공해 드릴 수 있습니다.\n\n검색 예시가 필요하면 「예시」 또는 「협회 목록」을 입력해 주십시오.",
+    "협회 데이터베이스 접근이 승인되었습니다.\n\n유스트리아 대륙의 모든 기록이 아카식레코드에 저장되어 있습니다. 역사, 지역, 세력, 이능력, 마물 등 원하시는 정보를 요청해 주십시오.\n\n무엇을 검색할지 모르겠다면 「도움말」을 입력하십시오."
   ]
   
   return `${defaultResponses[Math.floor(Math.random() * defaultResponses.length)]}`
@@ -556,19 +1435,206 @@ const getInitialMessages = (): Message[] => [
   {
     id: "1",
     role: "assistant",
-    content: "안녕하십니까, 요원님. 저는 아카식레코드(AKASHIC RECORD), 엘모라 협회의 중앙 AI 시스템입니다.\n\n현재 유스트리아력 266년, 모든 시스템이 정상 가동 중이며 지령을 대기하고 있습니다. 월식 및 산하·직할 협회 데이터베이스는 구축이 완료되어 있습니다.\n\n▸ 세계관 및 역사 정보\n▸ 지역 정보 (엘모라, 녹타르, 바실라)\n▸ 세력 및 위협 정보\n▸ 협회 개별 질의 (명멸 · 엑시드 · 칠성 · 여명 · 서광 · 황혼 · 월식 등)\n▸ 전체 색인 — 「협회 목록」으로 질의\n\n무엇을 도와드릴까요? (필요하신 항목을 말씀해 주십시오.)",
+    content: "안녕하십니까, 요원님. 여기는 아카식레코드 중앙 열람 콘솔입니다.\n\n현재 유스트리아력 266년, 모든 시스템이 정상 가동 중이며 지령을 대기하고 있습니다. 월식 및 산하·직할 협회 데이터베이스는 구축이 완료되어 있습니다.\n\n▸ 세계관 및 역사 정보\n▸ 지역 정보 (엘모라, 녹타르, 바실라)\n▸ 세력 및 위협 정보\n▸ 협회 개별 질의 (명멸 · 엑시드 · 칠성 · 여명 · 서광 · 황혼 · 월식 등)\n▸ 전체 색인 — 「협회 목록」으로 질의\n▸ 검색 가이드 — 「도움말」 또는 「메뉴얼」로 질의\n▸ 빠른 시작 — 하단 추천 검색어 선택\n\n무엇을 도와드릴까요?",
     timestamp: new Date(),
+    source: "system",
   },
 ]
+
+interface QuickQuery {
+  query: string
+  label: string
+  mobileLabel: string
+}
+
+const DEFAULT_QUICK_QUERIES = ["도움말", "엘모라", "녹타르", "뤼네", "네메시스", "마나", "협회 목록", "월식령"]
+
+const QUICK_QUERY_LABELS: Record<string, string> = {
+  "도움말": "ENTRY // 도움말",
+  "엘모라": "LUMEN // 엘모라",
+  "녹타르": "SHADOW // 녹타르",
+  "뤼네": "RUINAE // 뤼네",
+  "네메시스": "NEMESIS // 네메시스",
+  "마나": "ARCANE // 마나",
+  "협회 목록": "INDEX // 협회 목록",
+  "월식령": "ECLIPSE // 월식령",
+  "엘모라 상세": "LUMEN DOSSIER // 엘모라 상세",
+  "에클리시아": "CAPITAL NODE // 에클리시아",
+  "워프게이트": "TRANSIT GATE // 워프게이트",
+  "샤텐라우그": "CORE DEVICE // 샤텐라우그",
+  "월식": "ECLIPSE // 월식",
+  "녹타르 상세": "SHADOW DOSSIER // 녹타르 상세",
+  "호라이즌": "UPPER ZONE // 호라이즌",
+  "에스카톤": "LOWER ZONE // 에스카톤",
+  "암시장": "BLACK MARKET // 암시장",
+  "뤼네 상세": "RUINAE DOSSIER // 뤼네 상세",
+  "파타르키아 뤼네": "PEITHARCHIA // 파타르키아 뤼네",
+  "타뷸라 뤼네": "TABULA // 타뷸라 뤼네",
+  "뤼네 EDEN": "MEDIC LINE // 뤼네 EDEN",
+  "네메시스 상세": "NEMESIS DOSSIER // 네메시스 상세",
+  "카사 프리마": "CAUSE PRIMA // 카사 프리마",
+  "멘토": "CHAIN SYSTEM // 멘토",
+  "피라미드 의식": "RITUAL // 피라미드 의식",
+  "마나 상세": "ARCANE DOSSIER // 마나 상세",
+  "제논": "XENON // 제논",
+  "절대성": "ABSOLUTENESS // 절대성",
+  "마나 사용자 등급 제도": "RANK FRAME // 등급 제도",
+  "마나 사용자 등급": "RANK TABLE // 사용자 등급",
+  "플뤼겔": "GRAY ZONE // 플뤼겔",
+  "서광": "LUMINANCE // 서광",
+  "황혼": "TWILIGHT // 황혼",
+  "명멸": "NIGHTFALL // 명멸",
+  "여명": "DAYBREAK // 여명",
+  "서고": "ARCHIVE // 서고",
+}
+
+function toQuickQueries(queries: string[]): QuickQuery[] {
+  return queries.map((query) => ({
+    query,
+    label: QUICK_QUERY_LABELS[query] ?? `QUERY // ${query}`,
+    mobileLabel: query,
+  }))
+}
+
+function getRecommendedQueries(input: string): QuickQuery[] {
+  const lower = input.toLowerCase().trim()
+
+  if (!lower) return toQuickQueries(DEFAULT_QUICK_QUERIES)
+
+  if (lower.includes("도움말") || lower.includes("메뉴얼") || lower.includes("매뉴얼")) {
+    return toQuickQueries(["도움말", "협회 목록", "엘모라 상세", "네메시스 상세", "마나", "월식령"])
+  }
+
+  if (lower.includes("엘모라") || lower.includes("에클리시아") || lower.includes("샤텐라우그")) {
+    return toQuickQueries(["엘모라 상세", "에클리시아", "워프게이트", "샤텐라우그", "월식", "협회 목록"])
+  }
+
+  if (lower.includes("녹타르") || lower.includes("호라이즌") || lower.includes("에스카톤")) {
+    return toQuickQueries(["녹타르 상세", "호라이즌", "에스카톤", "암시장", "네메시스", "뤼네"])
+  }
+
+  if (lower.includes("뤼네") || lower.includes("tabula") || lower.includes("타뷸라")) {
+    return toQuickQueries(["뤼네 상세", "파타르키아 뤼네", "타뷸라 뤼네", "뤼네 EDEN", "네메시스", "녹타르 상세"])
+  }
+
+  if (lower.includes("네메시스") || lower.includes("멘토") || lower.includes("피라미드")) {
+    return toQuickQueries(["네메시스 상세", "카사 프리마", "멘토", "피라미드 의식", "녹타르 상세", "뤼네"])
+  }
+
+  if (lower.includes("마나") || lower.includes("제논") || lower.includes("절대성") || lower.includes("등급")) {
+    return toQuickQueries(["마나 상세", "제논", "절대성", "마나 사용자 등급 제도", "마나 사용자 등급", "플뤼겔"])
+  }
+
+  if (lower.includes("협회") || lower.includes("월식") || lower.includes("서광") || lower.includes("황혼") || lower.includes("명멸") || lower.includes("여명")) {
+    return toQuickQueries(["협회 목록", "월식", "서광", "황혼", "명멸", "여명"])
+  }
+
+  const searchable = [
+    ...DEFAULT_QUICK_QUERIES,
+    "엘모라 상세",
+    "녹타르 상세",
+    "뤼네 상세",
+    "파타르키아 뤼네",
+    "타뷸라 뤼네",
+    "네메시스 상세",
+    "공방 SOUL",
+    "어비스",
+    "플뤼겔",
+    "제논",
+    "절대성",
+    "마나 사용자 등급",
+    "마나 사용자 등급 제도",
+    "서광",
+    "황혼",
+    "명멸",
+    "여명",
+    "협회 목록",
+    "서고",
+  ]
+
+  const matches = searchable.filter((query) => query.toLowerCase().includes(lower))
+  return matches.length > 0 ? toQuickQueries(matches.slice(0, 8)) : toQuickQueries(DEFAULT_QUICK_QUERIES)
+}
+
+function getRelatedQueries(text: string): string[] {
+  const lower = text.toLowerCase()
+
+  if (lower.includes("검색 메뉴얼") || lower.includes("검색이 막막")) {
+    return ["엘모라 상세", "네메시스 상세", "타뷸라 뤼네"]
+  }
+
+  if (lower.includes("뤼네")) {
+    return ["파타르키아 뤼네", "타뷸라 뤼네", "뤼네 EDEN"]
+  }
+
+  if (lower.includes("네메시스")) {
+    return ["네메시스 상세", "멘토", "피라미드 의식"]
+  }
+
+  if (lower.includes("엘모라")) {
+    return ["엘모라 상세", "에클리시아", "월식"]
+  }
+
+  if (lower.includes("녹타르")) {
+    return ["녹타르 상세", "호라이즌", "에스카톤"]
+  }
+
+  if (lower.includes("소울") || lower.includes("abyss") || lower.includes("어비스")) {
+    return ["공방 SOUL", "어비스", "녹타르 상세"]
+  }
+
+  if (lower.includes("플뤼겔") || lower.includes("중립지대") || lower.includes("회색지대")) {
+    return ["플뤼겔", "제논", "절대성"]
+  }
+
+  if (lower.includes("마나") || lower.includes("제논") || lower.includes("절대성") || lower.includes("등급")) {
+    return ["마나 상세", "제논", "마나 사용자 등급"]
+  }
+
+  if (lower.includes("협회") || lower.includes("월식") || lower.includes("서광") || lower.includes("황혼") || lower.includes("명멸") || lower.includes("여명")) {
+    return ["협회 목록", "월식", "황혼"]
+  }
+
+  return ["도움말", "협회 목록", "마나"]
+}
+
+function getQueryChipClass(query: string) {
+  const tone = detectLoreTone(query)
+
+  if (tone === "elmora") {
+    return "border-sky-400/35 bg-sky-500/10 text-sky-200 hover:border-sky-300/60 hover:bg-sky-500/15"
+  }
+
+  if (tone === "noktar") {
+    return "border-rose-400/35 bg-rose-500/10 text-rose-200 hover:border-rose-300/60 hover:bg-rose-500/15"
+  }
+
+  if (tone === "neutral") {
+    return "border-violet-400/35 bg-violet-500/10 text-violet-200 hover:border-violet-300/60 hover:bg-violet-500/15"
+  }
+
+  return "border-border/70 bg-secondary/40 text-muted-foreground hover:border-border hover:bg-secondary/70 hover:text-foreground"
+}
+
+const buildApiMessages = (messages: Message[]): ApiMessage[] =>
+  messages.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }))
 
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [mounted, setMounted] = useState(false)
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [showAllQuickQueries, setShowAllQuickQueries] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [aiMode, setAiMode] = useState<"checking" | "online" | "offline">("checking")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const activeTone = detectLoreTone(input)
+  const activeToneMeta = getToneMeta(activeTone)
+  const recommendedQueries = getRecommendedQueries(input)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -577,39 +1643,128 @@ export function ChatInterface() {
   useEffect(() => {
     setMounted(true)
     setMessages(getInitialMessages())
+
+    const checkAiStatus = async () => {
+      try {
+        const res = await fetch("/api/chat/status", { method: "GET" })
+        if (!res.ok) {
+          setAiMode("offline")
+          return
+        }
+
+        const data = (await res.json()) as {
+          enabled: boolean
+        }
+        setAiMode(data.enabled ? "online" : "offline")
+      } catch {
+        setAiMode("offline")
+      }
+    }
+
+    checkAiStatus()
   }, [])
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isTyping) return
+  useEffect(() => {
+    setShowAllQuickQueries(false)
+  }, [input])
+
+  const submitQuery = async (rawInput: string) => {
+    const trimmedInput = rawInput.trim()
+    if (!trimmedInput || isTyping) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input.trim(),
+      content: trimmedInput,
       timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
+    if (inputRef.current) {
+      inputRef.current.style.height = "44px"
+    }
     setIsTyping(true)
 
-    // 세계관 지식 기반 AI 응답 생성
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+    const conversationForApi = [...messages, userMessage].slice(-12)
+    const assistantId = (Date.now() + 1).toString()
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: assistantId,
         role: "assistant",
-        content: generateContextualResponse(userMessage.content),
+        content: "",
         timestamp: new Date(),
+        source: "pending",
+      },
+    ])
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages: buildApiMessages(conversationForApi) }),
+      })
+
+      if (!res.ok) {
+        throw new Error(`AI API failed: ${res.status}`)
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
+      if (!res.body) {
+        throw new Error("AI stream is empty")
+      }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let streamedContent = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        streamedContent += decoder.decode(value, { stream: true })
+
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantId
+              ? { ...message, content: streamedContent, source: "live-ai" }
+              : message
+          )
+        )
+      }
+
+      if (!streamedContent.trim()) {
+        throw new Error("AI stream returned empty content")
+      }
+
+    } catch {
+      const fallback = generateContextualResponse(userMessage.content)
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === assistantId
+            ? { ...message, content: fallback, source: "fallback" }
+            : message
+        )
+      )
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void submitQuery(input)
+  }
+
+  const handleQuickQuery = (query: string) => {
+    void submitQuery(query)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -632,9 +1787,9 @@ export function ChatInterface() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="flex h-16 items-center justify-between border-b border-border px-6">
+      <header className="flex items-center justify-between border-b border-border/70 bg-card/20 px-3 py-2.5 sm:h-16 sm:px-6 sm:py-0">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 sm:h-10 sm:w-10">
             <Sparkles className="h-5 w-5 text-primary" />
             <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
@@ -642,41 +1797,79 @@ export function ChatInterface() {
             </span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-wide text-foreground">
+            <h1 className="text-base font-semibold tracking-wide text-foreground sm:text-lg">
               아카식레코드
             </h1>
-            <p className="text-xs tracking-widest text-muted-foreground">
-              AKASHIC RECORD AI SYSTEM
-            </p>
+            <div className="mt-0.5 flex items-center gap-1.5 sm:gap-2">
+              <p suppressHydrationWarning className="hidden text-xs tracking-widest text-muted-foreground sm:block">
+                AKASHIC RECORD QUERY CONSOLE
+              </p>
+              <span
+                suppressHydrationWarning
+                className={cn(
+                  "rounded-full border px-2 py-0.5 text-[9px] tracking-wide sm:text-[10px]",
+                  aiMode === "online" && "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+                  aiMode === "offline" && "border-amber-400/40 bg-amber-500/10 text-amber-300",
+                  aiMode === "checking" && "border-border/70 bg-secondary/40 text-muted-foreground"
+                )}
+              >
+                {aiMode === "online"
+                  ? (
+                    <>
+                      <span className="sm:hidden">ONLINE</span>
+                      <span className="hidden sm:inline">ARCHIVE ONLINE</span>
+                    </>
+                  )
+                  : aiMode === "offline"
+                  ? (
+                    <>
+                      <span className="sm:hidden">LOCAL</span>
+                      <span className="hidden sm:inline">LOCAL ARCHIVE</span>
+                    </>
+                  )
+                  : (
+                    <>
+                      <span className="sm:hidden">CHECK</span>
+                      <span className="hidden sm:inline">STATUS CHECKING</span>
+                    </>
+                  )}
+              </span>
+            </div>
           </div>
         </div>
 
         <button
           onClick={handleReset}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="flex items-center gap-1 rounded-xl border border-transparent px-2 py-2 text-[11px] text-muted-foreground transition-colors hover:border-border/70 hover:bg-secondary/70 hover:text-foreground sm:gap-2 sm:px-3 sm:text-xs"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          대화 초기화
+          <span className="hidden sm:inline">대화 초기화</span>
+          <span className="sm:hidden">초기화</span>
         </button>
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+      <div className="flex-1 overflow-y-auto px-2.5 py-4 sm:px-6 sm:py-5">
+        <div className="mx-auto max-w-4xl space-y-5 sm:space-y-6">
           {messages.map((message) => (
+            (() => {
+              const tone = message.role === "assistant" ? detectLoreTone(message.content) : "default"
+              const toneMeta = getToneMeta(tone)
+
+              return (
             <div
               key={message.id}
               className={cn(
-                "group flex gap-4",
+                "group flex gap-3 sm:gap-4",
                 message.role === "user" ? "flex-row-reverse" : "flex-row"
               )}
             >
               {/* Avatar */}
               <div
                 className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9",
                   message.role === "assistant"
-                    ? "bg-primary/20 text-primary"
+                    ? toneMeta.avatar
                     : "bg-secondary text-muted-foreground"
                 )}
               >
@@ -690,20 +1883,44 @@ export function ChatInterface() {
               {/* Message Content */}
               <div
                 className={cn(
-                  "relative max-w-[80%] rounded-2xl px-4 py-3",
+                  "relative max-w-[96%] rounded-2xl border px-3 py-2.5 shadow-sm sm:max-w-[78%] sm:px-4 sm:py-3",
                   message.role === "assistant"
-                    ? "rounded-tl-sm bg-card text-card-foreground"
-                    : "rounded-tr-sm bg-primary text-primary-foreground"
+                    ? toneMeta.bubble
+                    : "rounded-tr-sm border-primary/40 bg-primary text-primary-foreground"
                 )}
               >
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                {message.role === "assistant" && (
+                  <>
+                    <span className={cn("mb-2 block h-[2px] w-20 rounded-full", toneMeta.accent)} />
+                    <p className="mb-1 text-[9px] tracking-[0.14em] text-muted-foreground/80 sm:text-[10px] sm:tracking-[0.18em]">{toneMeta.label}</p>
+                  </>
+                )}
+                <p className="whitespace-pre-wrap text-[13px] leading-6 sm:text-sm sm:leading-relaxed">
                   {message.content}
                 </p>
+                {message.role === "assistant" && message.source !== "pending" && (
+                  <div className="mt-3 flex flex-wrap gap-1.5 sm:gap-2">
+                    {getRelatedQueries(message.content).map((query) => (
+                      <button
+                        key={`${message.id}-${query}`}
+                        type="button"
+                        onClick={() => handleQuickQuery(query)}
+                        disabled={isTyping}
+                        className={cn(
+                          "rounded-full border px-2.5 py-1.5 text-[11px] tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:py-1 sm:text-[10px]",
+                          getQueryChipClass(query)
+                        )}
+                      >
+                        {query}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div
                   className={cn(
                     "mt-2 flex items-center gap-2 text-[10px]",
                     message.role === "assistant"
-                      ? "text-muted-foreground"
+                      ? toneMeta.time
                       : "text-primary-foreground/70"
                   )}
                 >
@@ -714,10 +1931,30 @@ export function ChatInterface() {
                     }) : "--:--"}
                   </span>
 
+                  {message.role === "assistant" && message.source && (
+                    <span
+                      className={cn(
+                        "rounded-full border px-1.5 py-0.5 text-[9px] tracking-wide",
+                        message.source === "live-ai" && "border-emerald-400/35 bg-emerald-500/10 text-emerald-300",
+                        message.source === "fallback" && "border-amber-400/35 bg-amber-500/10 text-amber-300",
+                        message.source === "pending" && "border-border/60 bg-secondary/30 text-muted-foreground",
+                        message.source === "system" && "border-sky-400/35 bg-sky-500/10 text-sky-300"
+                      )}
+                    >
+                      {message.source === "live-ai"
+                        ? "실시간 기록"
+                        : message.source === "fallback"
+                        ? "보관 기록"
+                        : message.source === "pending"
+                        ? "조회 중"
+                        : "SYSTEM"}
+                    </span>
+                  )}
+
                   {message.role === "assistant" && (
                     <button
                       onClick={() => handleCopy(message.content, message.id)}
-                      className="opacity-0 transition-opacity group-hover:opacity-100"
+                      className="opacity-70 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                     >
                       {copiedId === message.id ? (
                         <Check className="h-3 w-3 text-primary" />
@@ -729,18 +1966,20 @@ export function ChatInterface() {
                 </div>
               </div>
             </div>
+              )
+            })()
           ))}
 
           {/* Typing Indicator */}
           {isTyping && (
-            <div className="flex gap-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary">
+            <div className="flex gap-3 sm:gap-4">
+              <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9", activeToneMeta.avatar)}>
                 <Sparkles className="h-4 w-4" />
               </div>
-              <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm bg-card px-4 py-3">
-                <span className="h-2 w-2 animate-bounce rounded-full bg-primary/60 [animation-delay:-0.3s]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-primary/60 [animation-delay:-0.15s]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-primary/60" />
+              <div className={cn("flex items-center gap-1.5 rounded-2xl rounded-tl-sm border px-4 py-3", activeToneMeta.bubble)}>
+                <span className={cn("h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]", activeToneMeta.accent)} />
+                <span className={cn("h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]", activeToneMeta.accent)} />
+                <span className={cn("h-2 w-2 animate-bounce rounded-full", activeToneMeta.accent)} />
               </div>
             </div>
           )}
@@ -750,20 +1989,65 @@ export function ChatInterface() {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-border p-4">
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
-          <div className="relative flex items-end rounded-2xl border border-border bg-card p-2 transition-colors focus-within:border-primary/50">
+      <div className="border-t border-border/70 bg-card/20 p-3 sm:p-4">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-4xl">
+          <div className="mb-3">
+            <span className="mb-2 block text-[10px] tracking-[0.2em] text-muted-foreground">작전 추천 키워드</span>
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:hidden">
+            {(showAllQuickQueries ? recommendedQueries : recommendedQueries.slice(0, 5)).map((quickQuery) => (
+              <button
+                key={quickQuery.query}
+                type="button"
+                onClick={() => handleQuickQuery(quickQuery.query)}
+                disabled={isTyping}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1.5 text-[11px] transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs",
+                  getQueryChipClass(quickQuery.query)
+                )}
+              >
+                <span className="sm:hidden">{quickQuery.mobileLabel}</span>
+                <span className="hidden sm:inline">{quickQuery.label}</span>
+              </button>
+            ))}
+            </div>
+            {recommendedQueries.length > 5 && (
+              <button
+                type="button"
+                onClick={() => setShowAllQuickQueries((prev) => !prev)}
+                className="mt-1 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:hidden"
+              >
+                {showAllQuickQueries ? "추천 키워드 접기" : "추천 키워드 더보기"}
+              </button>
+            )}
+            <div className="hidden flex-wrap items-center gap-2 sm:flex">
+            {recommendedQueries.map((quickQuery) => (
+              <button
+                key={`desktop-${quickQuery.query}`}
+                type="button"
+                onClick={() => handleQuickQuery(quickQuery.query)}
+                disabled={isTyping}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                  getQueryChipClass(quickQuery.query)
+                )}
+              >
+                {quickQuery.label}
+              </button>
+            ))}
+            </div>
+          </div>
+          <div className={cn("relative flex items-end rounded-2xl border bg-card/80 p-2 transition-colors", input.trim() ? "border-primary/40" : "border-border/70", activeTone === "elmora" && "focus-within:border-sky-400/60", activeTone === "noktar" && "focus-within:border-rose-400/60", activeTone === "neutral" && "focus-within:border-violet-400/60", activeTone === "default" && "focus-within:border-primary/50")}>
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="지령을 입력해 주십시오…"
+              placeholder="예: 뤼네, 네메시스 상세, 마나 등급"
               rows={1}
-              className="max-h-32 min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="max-h-32 min-h-[48px] flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-[13px] placeholder:text-muted-foreground focus:outline-none"
               style={{
                 height: "auto",
-                minHeight: "44px",
+                minHeight: "48px",
               }}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement
@@ -775,18 +2059,25 @@ export function ChatInterface() {
               type="submit"
               disabled={!input.trim() || isTyping}
               className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all",
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-all sm:h-10 sm:w-10",
                 input.trim() && !isTyping
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "bg-secondary text-muted-foreground"
+                  ? activeTone === "elmora"
+                    ? "border-sky-400/60 bg-sky-500 text-white hover:bg-sky-500/90"
+                    : activeTone === "noktar"
+                    ? "border-rose-500/60 bg-rose-500 text-white hover:bg-rose-500/90"
+                    : activeTone === "neutral"
+                    ? "border-violet-400/60 bg-violet-500 text-white hover:bg-violet-500/90"
+                    : "border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "border-transparent bg-secondary text-muted-foreground"
               )}
             >
               <Send className="h-4 w-4" />
             </button>
           </div>
-          <p className="mt-2 text-center text-[10px] tracking-wider text-muted-foreground">
-            모든 대화는 보안 프로토콜에 따라 기록됩니다
-          </p>
+          <div className="mt-2 flex flex-col gap-1 text-center text-[11px] tracking-wide text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:text-left sm:text-[10px] sm:tracking-wider">
+            <p>추천 검색어를 누르거나 직접 입력해 바로 조회할 수 있습니다</p>
+            <p>모든 대화는 보안 프로토콜에 따라 기록됩니다</p>
+          </div>
         </form>
       </div>
     </div>

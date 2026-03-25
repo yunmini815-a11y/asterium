@@ -39,15 +39,15 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "relative flex flex-col border-r border-border bg-sidebar transition-all duration-300",
+        "relative flex h-full flex-col border-r border-border/70 bg-sidebar/85 backdrop-blur-md transition-all duration-300",
         collapsed ? "w-20" : "w-72"
       )}
     >
       {/* Header */}
-      <div className="flex h-20 items-center border-b border-border px-4">
+      <div className="flex h-20 items-center border-b border-border/70 px-4">
         <div className="flex items-center gap-3">
           <div className="relative flex h-10 w-10 items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />
+            <div className="absolute inset-0 rounded-full bg-primary/15 blur-[1px]" />
             <Activity className="h-6 w-6 text-primary" />
           </div>
           {!collapsed && (
@@ -55,7 +55,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
               <span className="text-xs font-medium tracking-[0.2em] text-primary">
                 SEOGWANG
               </span>
-              <span className="text-[10px] tracking-[0.15em] text-muted-foreground">
+              <span className="text-[10px] tracking-[0.15em] text-muted-foreground/90">
                 CENTRAL CONTROL
               </span>
             </div>
@@ -75,10 +75,10 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
                 key={item.id}
                 onClick={() => onMenuChange(item.id)}
                 className={cn(
-                  "group relative flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-all duration-200",
+                  "group relative flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-all duration-200",
                   isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-secondary/70 hover:text-foreground"
                 )}
               >
                 {/* Active indicator */}
@@ -89,7 +89,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
                 <div
                   className={cn(
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors",
-                    isActive ? "bg-primary/20" : "bg-secondary"
+                    isActive ? "bg-primary/20" : "bg-secondary/80"
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -110,9 +110,9 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
       </nav>
 
       {/* Status Footer */}
-      <div className="border-t border-border p-4">
+      <div className="border-t border-border/70 p-4">
         {!collapsed && (
-          <div className="mb-3 space-y-2">
+          <div className="mb-3 rounded-xl border border-border/70 bg-card/60 p-3 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">STATUS</span>
               <span className="flex items-center gap-1.5 text-emerald-500">
@@ -129,7 +129,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex h-9 w-full items-center justify-center rounded-lg bg-secondary text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex h-9 w-full items-center justify-center rounded-lg bg-secondary/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />

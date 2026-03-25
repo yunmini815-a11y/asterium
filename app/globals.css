@@ -82,8 +82,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-sans: var(--font-geist), 'Geist Fallback';
+  --font-mono: var(--font-geist-mono), 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -128,5 +128,53 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at 15% 20%, color-mix(in oklch, var(--primary) 22%, transparent) 0%, transparent 48%),
+      radial-gradient(circle at 85% 0%, color-mix(in oklch, var(--secondary) 40%, transparent) 0%, transparent 38%),
+      linear-gradient(180deg, color-mix(in oklch, var(--background) 86%, black 14%) 0%, var(--background) 100%);
+    background-attachment: fixed;
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 45%, transparent);
+    color: var(--foreground);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: color-mix(in oklch, var(--background) 92%, black 8%);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--primary) 22%, var(--border));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--primary) 34%, var(--border));
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: color-mix(in oklch, var(--card) 84%, transparent);
+    backdrop-filter: blur(10px);
+  }
+
+  .subtle-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, var(--border) 42%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--border) 42%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
   }
 }

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
+import { cn } from "@/lib/utils"
 import { Globe, Shield, Lock, FileText, Users, AlertTriangle } from "lucide-react"
 
 function WorldviewPanel() {
@@ -14,9 +15,9 @@ function WorldviewPanel() {
   ]
 
   return (
-    <div className="flex h-full flex-col p-6">
-      <div className="mb-6">
-        <h2 className="flex items-center gap-3 text-lg font-semibold text-foreground">
+    <div className="flex h-full flex-col p-4 sm:p-6">
+      <div className="mb-5 sm:mb-6">
+        <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
           <Globe className="h-5 w-5 text-primary" />
           세계관 조회
         </h2>
@@ -25,11 +26,11 @@ function WorldviewPanel() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
         {worldviewData.map((item) => (
           <div
             key={item.label}
-            className="rounded-xl border border-border bg-card p-4"
+            className="rounded-xl border border-border/70 bg-card/70 p-4"
           >
             <p className="text-xs text-muted-foreground">{item.label}</p>
             <div className="mt-2 flex items-end justify-between">
@@ -50,9 +51,9 @@ function WorldviewPanel() {
         ))}
       </div>
 
-      <div className="mt-6 flex-1 rounded-xl border border-border bg-card p-4">
+      <div className="mt-5 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card/70 p-4 sm:mt-6">
         <h3 className="mb-4 text-sm font-medium text-foreground">최근 관측 기록</h3>
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-y-auto">
           {[
             { id: "W-147", name: "신규 세계 발견", status: "분석 중", time: "2시간 전" },
             { id: "W-089", name: "차원 불안정 감지", status: "모니터링", time: "5시간 전" },
@@ -60,13 +61,13 @@ function WorldviewPanel() {
           ].map((record) => (
             <div
               key={record.id}
-              className="flex items-center justify-between rounded-lg bg-secondary/50 p-3"
+              className="flex flex-col gap-2 rounded-lg bg-secondary/40 p-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-3">
                 <span className="font-mono text-xs text-primary">{record.id}</span>
                 <span className="text-sm text-foreground">{record.name}</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
                   {record.status}
                 </span>
@@ -89,9 +90,9 @@ function AuditPanel() {
   ]
 
   return (
-    <div className="flex h-full flex-col p-6">
-      <div className="mb-6">
-        <h2 className="flex items-center gap-3 text-lg font-semibold text-foreground">
+    <div className="flex h-full flex-col p-4 sm:p-6">
+      <div className="mb-5 sm:mb-6">
+        <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
           <Shield className="h-5 w-5 text-primary" />
           역량 감사
         </h2>
@@ -100,15 +101,15 @@ function AuditPanel() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-4">
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+        <div className="rounded-xl border border-border/70 bg-card/70 p-4">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             <span className="text-xs text-muted-foreground">총 활성 요원</span>
           </div>
           <p className="mt-2 text-3xl font-bold text-foreground">247</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border/70 bg-card/70 p-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-primary" />
             <span className="text-xs text-muted-foreground">평균 역량 지수</span>
@@ -117,15 +118,15 @@ function AuditPanel() {
         </div>
       </div>
 
-      <div className="mt-6 flex-1 overflow-hidden rounded-xl border border-border bg-card">
-        <div className="border-b border-border p-4">
+      <div className="mt-5 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card/70 sm:mt-6">
+        <div className="border-b border-border/70 p-4">
           <h3 className="text-sm font-medium text-foreground">요원 목록</h3>
         </div>
-        <div className="divide-y divide-border">
+        <div className="h-full divide-y divide-border/70 overflow-y-auto">
           {agents.map((agent) => (
             <div
               key={agent.id}
-              className="flex items-center justify-between p-4 transition-colors hover:bg-secondary/30"
+              className="flex flex-col gap-3 p-4 transition-colors hover:bg-secondary/30 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
@@ -139,7 +140,7 @@ function AuditPanel() {
                   <span className="text-xs text-muted-foreground">{agent.rank}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center justify-between gap-4 sm:justify-end sm:gap-6">
                 <div className="w-24">
                   <div className="mb-1 flex justify-between text-xs">
                     <span className="text-muted-foreground">역량</span>
@@ -174,16 +175,104 @@ function AuditPanel() {
 
 function ArchivePanel() {
   const documents = [
-    { id: "DOC-2847", title: "프로젝트 오로라 보고서", level: "기밀", date: "266.03.15" },
-    { id: "DOC-1923", title: "차원 게이트 연구 논문", level: "일반", date: "266.03.10" },
-    { id: "DOC-3156", title: "요원 훈련 프로토콜 v3", level: "보통", date: "266.03.08" },
-    { id: "DOC-0847", title: "이상현상 대응 매뉴얼", level: "기밀", date: "266.02.28" },
+    {
+      id: "DOC-2847",
+      title: "프로젝트 플뤼겔 보고서",
+      level: "기밀",
+      date: "266.03.15",
+      summary: "바실라 심부에서 회수된 비행형 잔해와 인공 마나흐름에 관한 통합 보고서.",
+      content: [
+        "회수된 파편 7점은 기존 명멸 공정에서 확인된 합금비와 일치하지 않습니다. 외층은 오리하르콘 계열이나 내층은 생체 반응성을 보였습니다.",
+        "잔해의 문양은 서광 제2과가 보관 중인 금기 문서 「쌍익의 도해」와 83% 유사합니다. 해당 도해는 열람 1급으로 재분류 요청되었습니다.",
+        "시험 가동 중 파편이 스스로 공명하며 단일 음절을 반복했습니다. 음성분석 결과 '플뤼겔'과 가장 근접한 파형으로 판독됩니다.",
+      ],
+    },
+    {
+      id: "DOC-1923",
+      title: "제4게이트 역진입 실험 기록",
+      level: "일반",
+      date: "266.03.10",
+      summary: "게이트 내부로 역진입한 선발대의 생체/시간 지표와 귀환 후 변이 보고.",
+      content: [
+        "역진입 3분 12초 시점부터 모든 시계 장치가 역행했습니다. 귀환 시 실제 경과시간은 19분, 체감시간 진술은 4시간 이상으로 불일치합니다.",
+        "대원 2인은 귀환 직후 동일 인물을 '두 번 본 적 있다'고 진술했습니다. 서광은 이를 단순 착시가 아닌 인지 중첩 현상으로 분류했습니다.",
+        "게이트 표면에서 채취한 마나막 잔류값은 월식령 선포 직후 관측되는 도시 전역 파장과 동일 대역을 포함합니다.",
+      ],
+    },
+    {
+      id: "DOC-3156",
+      title: "황혼 루 레흐 비인가 소집 로그",
+      level: "보통",
+      date: "266.03.08",
+      summary: "공식 명령 없이 발생한 루 레흐 집결 사건에 대한 통신 기록 발췌.",
+      content: [
+        "266.03.08 02:14, 내부 채널에 협회장 서명 없는 집결 신호가 송신되었습니다. 그러나 코드 체계는 정식 천명 양식과 완전히 일치했습니다.",
+        "현장 도착 요원 전원이 '같은 명령을 각자 다른 목소리로 들었다'고 보고했습니다. 지시 내용은 모두 동일했으나 호출 주체를 특정하지 못했습니다.",
+        "로그 말미에는 신원 미상의 문자열이 남아 있습니다: '늑대가 아니라, 목줄을 쥔 손을 추적하라.'",
+      ],
+    },
+    {
+      id: "DOC-0847",
+      title: "엘모라 북벽 무음현상 관측서",
+      level: "기밀",
+      date: "266.02.28",
+      summary: "북벽 감시구역에서 주기적으로 발생하는 11초 무음 구간 관측 결과.",
+      content: [
+        "무음 구간 동안 바람, 발화, 마나 반응이 완전히 소실됩니다. 시각 정보는 유지되나 모든 소리의 전파가 정지된 것으로 추정됩니다.",
+        "11초 종료 직후 감시 인력 4인은 서로 다른 문장을 들었다고 진술했으나, 모두 마지막 단어가 '서고'로 일치했습니다.",
+        "현상 재현 시 북벽 아래 봉인석의 문양 일부가 발광했습니다. 여명협회는 외부 요인보다 내부 공명 가능성에 무게를 두고 있습니다.",
+      ],
+    },
+    {
+      id: "DOC-4412",
+      title: "서고 열람 0급 접근 시도 흔적",
+      level: "기밀",
+      date: "266.02.23",
+      summary: "존재가 공식 부정된 0급 서가 접근 흔적에 대한 역추적 보고.",
+      content: [
+        "접근 로그는 남아 있으나 주체 로그는 비어 있습니다. 기록상 '문이 열렸다'는 결과만 존재하고 누가 열었는지는 남지 않았습니다.",
+        "서고 내부 기록은 변조 불가 원칙을 유지하고 있으나, 본 건은 변조가 아닌 '기록자 부재'에 가깝습니다.",
+        "사서 직속 검토 결론: 누군가 들어간 것이 아니라, 누군가 이미 안쪽에서 문을 열었을 가능성이 더 높습니다.",
+      ],
+    },
+    {
+      id: "DOC-5570",
+      title: "월식령 선포 전 43초 공백 분석",
+      level: "보통",
+      date: "266.02.17",
+      summary: "월식령 선포 직전 도시 기록망에서 동시에 누락된 43초의 흔적 분석.",
+      content: [
+        "모든 관제 시스템에서 동일한 길이의 공백이 확인되었습니다. 장비 고장으로 보기엔 손실 패턴이 지나치게 정밀합니다.",
+        "공백 직전 마지막 프레임에는 하늘에 반달 문양이 겹쳐 관측됩니다. 그러나 당시 기상 기록에는 해당 광학 조건이 존재하지 않습니다.",
+        "결론은 보류되었습니다. 다만 공백 이후 첫 통신 문장만은 공통입니다: '우리는 언제나, 어느 곳에든 존재한다.'",
+      ],
+    },
   ]
 
+  const [selectedDocId, setSelectedDocId] = useState(documents[0].id)
+  const [revealedLineCount, setRevealedLineCount] = useState(0)
+  const selectedDoc = documents.find((doc) => doc.id === selectedDocId) ?? documents[0]
+
+  useEffect(() => {
+    setRevealedLineCount(0)
+
+    const timer = setInterval(() => {
+      setRevealedLineCount((prev) => {
+        if (prev >= selectedDoc.content.length) {
+          clearInterval(timer)
+          return prev
+        }
+        return prev + 1
+      })
+    }, 220)
+
+    return () => clearInterval(timer)
+  }, [selectedDocId, selectedDoc.content.length])
+
   return (
-    <div className="flex h-full flex-col p-6">
-      <div className="mb-6">
-        <h2 className="flex items-center gap-3 text-lg font-semibold text-foreground">
+    <div className="flex h-full flex-col p-4 sm:p-6">
+      <div className="mb-5 sm:mb-6">
+        <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
           <Lock className="h-5 w-5 text-primary" />
           기밀 보관소
         </h2>
@@ -192,7 +281,7 @@ function ArchivePanel() {
         </p>
       </div>
 
-      <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
+      <div className="mb-5 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:mb-6">
         <div className="flex items-center gap-2 text-primary">
           <AlertTriangle className="h-4 w-4" />
           <span className="text-xs font-medium">보안 경고</span>
@@ -203,37 +292,91 @@ function ArchivePanel() {
         </p>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto">
-        {documents.map((doc) => (
-          <div
-            key={doc.id}
-            className="group flex cursor-pointer items-center justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:bg-card/80"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <FileText className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-primary">{doc.id}</span>
-                  <span
-                    className={`rounded px-1.5 py-0.5 text-[10px] ${
-                      doc.level === "기밀"
-                        ? "bg-red-500/10 text-red-400"
-                        : doc.level === "보통"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-secondary text-muted-foreground"
-                    }`}
-                  >
-                    {doc.level}
-                  </span>
+      <div className="grid flex-1 gap-3 overflow-hidden lg:grid-cols-2">
+        <div className="space-y-3 overflow-y-auto pr-1">
+          {documents.map((doc) => {
+            const isActive = selectedDocId === doc.id
+
+            return (
+              <button
+                type="button"
+                key={doc.id}
+                onClick={() => setSelectedDocId(doc.id)}
+                className={`group w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${
+                  isActive
+                    ? "border-primary/40 bg-primary/10"
+                    : "border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
+                }`}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                      <FileText className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-primary">{doc.id}</span>
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] ${
+                            doc.level === "기밀"
+                              ? "bg-red-500/10 text-red-400"
+                              : doc.level === "보통"
+                              ? "bg-primary/10 text-primary"
+                              : "bg-secondary text-muted-foreground"
+                          }`}
+                        >
+                          {doc.level}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-sm text-foreground">{doc.title}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{doc.date}</span>
                 </div>
-                <p className="mt-0.5 text-sm text-foreground">{doc.title}</p>
-              </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <article className="flex min-h-[260px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card/80">
+          <div className="border-b border-border/70 p-4">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-primary">{selectedDoc.id}</span>
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] ${
+                  selectedDoc.level === "기밀"
+                    ? "bg-red-500/10 text-red-400"
+                    : selectedDoc.level === "보통"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-secondary text-muted-foreground"
+                }`}
+              >
+                {selectedDoc.level}
+              </span>
+              <span className="ml-auto text-xs text-muted-foreground">{selectedDoc.date}</span>
             </div>
-            <span className="text-xs text-muted-foreground">{doc.date}</span>
+            <h3 className="mt-2 text-base font-semibold text-foreground">{selectedDoc.title}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{selectedDoc.summary}</p>
           </div>
-        ))}
+
+          <div className="space-y-3 overflow-y-auto p-4 text-sm leading-relaxed text-foreground/90">
+            {selectedDoc.content.map((line, index) => {
+              if (index >= revealedLineCount) return null
+
+              return (
+                <p key={`${selectedDoc.id}-${index}`} className="animate-in fade-in-0 duration-300">
+                  {line}
+                </p>
+              )
+            })}
+
+            {revealedLineCount < selectedDoc.content.length && (
+              <p className="font-mono text-xs text-primary/80">
+                기록 열람 중<span className="animate-pulse">▋</span>
+              </p>
+            )}
+          </div>
+        </article>
       </div>
     </div>
   )
@@ -241,6 +384,19 @@ function ArchivePanel() {
 
 export default function Dashboard() {
   const [activeMenu, setActiveMenu] = useState("chat")
+  const [introReady, setIntroReady] = useState(false)
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setIntroReady(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  const mobileMenuItems = [
+    { id: "chat", label: "아카식" },
+    { id: "worldview", label: "세계관" },
+    { id: "audit", label: "역량" },
+    { id: "archive", label: "보관소" },
+  ]
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -256,14 +412,76 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar
-        activeMenu={activeMenu}
-        onMenuChange={(menu) => setActiveMenu(menu === activeMenu ? "chat" : menu)}
+    <div className="flex min-h-screen w-full items-stretch p-2 sm:p-4">
+      <div
+        className={cn(
+          "subtle-grid pointer-events-none fixed inset-0 transition-opacity duration-700",
+          introReady ? "opacity-[0.08]" : "opacity-0"
+        )}
       />
-      <main className="flex flex-1 flex-col overflow-hidden">
+      <div
+        className={cn(
+          "hidden transition-all duration-500 ease-out lg:flex",
+          introReady ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"
+        )}
+        style={{ transitionDelay: introReady ? "80ms" : "0ms" }}
+      >
+        <Sidebar
+          activeMenu={activeMenu}
+          onMenuChange={(menu) => setActiveMenu(menu === activeMenu ? "chat" : menu)}
+        />
+      </div>
+      <main
+        className={cn(
+          "glass-panel relative flex min-h-[calc(100dvh-1rem)] flex-1 flex-col overflow-hidden rounded-2xl border border-border/70 shadow-2xl shadow-black/30 transition-all duration-700 ease-out sm:min-h-[calc(100dvh-2rem)] sm:rounded-3xl",
+          introReady ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+        )}
+      >
         <Header />
-        <div className="flex-1 overflow-hidden">{renderContent()}</div>
+
+        <nav
+          className={cn(
+            "flex gap-1.5 overflow-x-auto border-b border-border/70 px-3 py-2.5 transition-all duration-500 lg:hidden",
+            introReady ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+          )}
+          style={{ transitionDelay: introReady ? "140ms" : "0ms" }}
+        >
+          {mobileMenuItems.map((item) => {
+            const isActive = activeMenu === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveMenu(item.id)}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1.5 text-[11px] tracking-wide transition-colors",
+                  isActive
+                    ? "border-primary/50 bg-primary/10 text-primary"
+                    : "border-border/70 bg-card/60 text-muted-foreground"
+                )}
+              >
+                {item.label}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div
+          className={cn(
+            "flex-1 overflow-hidden transition-all duration-700",
+            introReady ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+          )}
+          style={{ transitionDelay: introReady ? "180ms" : "0ms" }}
+        >
+          {renderContent()}
+        </div>
+
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-primary/20 via-transparent to-transparent transition-opacity duration-700",
+            introReady ? "opacity-0" : "opacity-100"
+          )}
+        />
       </main>
     </div>
   )

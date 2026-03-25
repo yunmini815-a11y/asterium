@@ -49,34 +49,34 @@ function TimeDisplay() {
 
 export function Header() {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-card/50 px-6 backdrop-blur-sm">
+    <header className="flex h-16 items-center justify-between border-b border-border/70 bg-card/35 px-4 backdrop-blur-md sm:px-6">
       {/* Left - Status */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
-          <Radio className="h-4 w-4 animate-pulse text-emerald-500" />
+          <Radio className="h-4 w-4 text-emerald-500" />
           <span className="text-xs tracking-widest text-muted-foreground">
             SYSTEM ACTIVE
           </span>
         </div>
-        <div className="h-4 w-px bg-border" />
+        <div className="hidden h-4 w-px bg-border sm:block" />
         <TimeDisplay />
       </div>
 
       {/* Right - Actions */}
       <div className="flex items-center gap-2">
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+        <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-muted-foreground transition-colors hover:border-border/70 hover:bg-secondary/70 hover:text-foreground">
           <Bell className="h-4 w-4" />
           <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
         </button>
-        <button className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+        <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-muted-foreground transition-colors hover:border-border/70 hover:bg-secondary/70 hover:text-foreground">
           <Settings className="h-4 w-4" />
         </button>
-        <div className="ml-2 h-4 w-px bg-border" />
-        <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+        <div className="ml-1 hidden h-4 w-px bg-border sm:block" />
+        <button className="flex items-center gap-2 rounded-xl border border-transparent px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:border-border/70 hover:bg-secondary/70 hover:text-foreground sm:px-3">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary">
             <User className="h-3.5 w-3.5" />
           </div>
-          <span className="text-xs tracking-wider">AGENT-001</span>
+          <span className="hidden text-xs tracking-wider sm:block">AGENT-001</span>
         </button>
       </div>
     </header>
