@@ -2,36 +2,13 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { Globe, Shield, Lock, ChevronLeft, ChevronRight, Activity } from "lucide-react"
+import { dashboardMenuItems } from "@/lib/dashboard-menu"
+import { ChevronLeft, ChevronRight, Activity } from "lucide-react"
 
 interface SidebarProps {
   activeMenu: string
   onMenuChange: (menu: string) => void
 }
-
-const menuItems = [
-  {
-    id: "worldview",
-    label: "세계관 조회",
-    labelEn: "WORLDVIEW",
-    icon: Globe,
-    description: "협회 세계관 데이터베이스",
-  },
-  {
-    id: "audit",
-    label: "권좌 명부",
-    labelEn: "THRONE REGISTRY",
-    icon: Shield,
-    description: "고위직 인물 열람고",
-  },
-  {
-    id: "archive",
-    label: "기밀 보관소",
-    labelEn: "CLASSIFIED ARCHIVE",
-    icon: Lock,
-    description: "기밀 문서 저장소",
-  },
-]
 
 export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
@@ -66,7 +43,7 @@ export function Sidebar({ activeMenu, onMenuChange }: SidebarProps) {
       {/* Menu Items */}
       <nav className="flex-1 p-4">
         <div className="space-y-2">
-          {menuItems.map((item) => {
+          {dashboardMenuItems.filter((item) => item.id !== "chat").map((item) => {
             const Icon = item.icon
             const isActive = activeMenu === item.id
 
