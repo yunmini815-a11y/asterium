@@ -251,14 +251,19 @@ function ArchivePanel() {
   ]
 
   const [selectedDocId, setSelectedDocId] = useState(documents[0].id)
+  const [mobileSelectedDocId, setMobileSelectedDocId] = useState(documents[0].id)
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list")
   const [revealedLineCount, setRevealedLineCount] = useState(0)
   const [mobileHintVisible, setMobileHintVisible] = useState(true)
   const [mobileNudgeActive, setMobileNudgeActive] = useState(false)
   const [detailPulse, setDetailPulse] = useState(false)
   const [mobileCarouselApi, setMobileCarouselApi] = useState<CarouselApi>()
   const detailPanelRef = useRef<HTMLElement>(null)
-  const selectedDoc = documents.find((doc) => doc.id === selectedDocId) ?? documents[0]
-  const selectedDocIndex = documents.findIndex((doc) => doc.id === selectedDocId)
+
+  const isMobileViewport = () => typeof window !== "undefined" && window.innerWidth < 1024
+  const effectiveSelectedDocId = isMobileViewport() ? mobileSelectedDocId : selectedDocId
+  const selectedDoc = documents.find((doc) => doc.id === effectiveSelectedDocId) ?? documents[0]
+  const selectedDocIndex = documents.findIndex((doc) => doc.id === effectiveSelectedDocId)
 
   useEffect(() => {
     setRevealedLineCount(0)
@@ -274,7 +279,7 @@ function ArchivePanel() {
     }, 220)
 
     return () => clearInterval(timer)
-  }, [selectedDocId, selectedDoc.content.length])
+  }, [effectiveSelectedDocId, selectedDoc.content.length])
 
   useEffect(() => {
     const isMobile = window.innerWidth < 1024
@@ -325,20 +330,22 @@ function ArchivePanel() {
     const syncSelectedDoc = () => {
       const nextIndex = mobileCarouselApi.selectedScrollSnap()
       const nextDoc = documents[nextIndex]
-      if (nextDoc && nextDoc.id !== selectedDocId) {
-        setSelectedDocId(nextDoc.id)
+      if (nextDoc && nextDoc.id !== mobileSelectedDocId) {
+        setMobileSelectedDocId(nextDoc.id)
       }
     }
 
     mobileCarouselApi.on("select", syncSelectedDoc)
     mobileCarouselApi.on("reInit", syncSelectedDoc)
-    syncSelectedDoc()
+    if (isMobileViewport()) {
+      syncSelectedDoc()
+    }
 
     return () => {
       mobileCarouselApi.off("select", syncSelectedDoc)
       mobileCarouselApi.off("reInit", syncSelectedDoc)
     }
-  }, [documents, mobileCarouselApi, selectedDocId])
+  }, [documents, mobileCarouselApi, mobileSelectedDocId])
 
   return (
     <div className="flex h-full flex-col p-4 sm:p-6">
@@ -394,7 +401,7 @@ function ArchivePanel() {
             >
               <CarouselContent className="archive-scroll -ml-2 pb-2 pr-10">
               {documents.map((doc) => {
-                const isActive = selectedDocId === doc.id
+                const isActive = mobileSelectedDocId === doc.id
 
                 return (
                   <CarouselItem key={doc.id} className="basis-[calc(100vw-2.5rem)] pl-2 sm:basis-[68vw]">
@@ -402,11 +409,14 @@ function ArchivePanel() {
                       type="button"
                       onClick={() => {
                         if (!isActive) {
-                          setSelectedDocId(doc.id)
+                          setMobileSelectedDocId(doc.id)
                           mobileCarouselApi?.scrollTo(documents.findIndex((item) => item.id === doc.id))
                         }
                         if (window.innerWidth < 1024) {
-                          detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                          setMobileView("detail")
+                          requestAnimationFrame(() => {
+                            detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                          })
                         }
                       }}
                       className={`group relative w-full overflow-hidden rounded-[1.35rem] border p-3 text-left transition-all duration-300 ${
@@ -486,14 +496,14 @@ function ArchivePanel() {
 
           <div className="mt-2 flex items-center justify-center gap-1.5 lg:hidden">
             {documents.map((doc, index) => {
-              const isActive = doc.id === selectedDocId
+              const isActive = doc.id === mobileSelectedDocId
               return (
                 <button
                   key={doc.id}
                   type="button"
                   aria-label={`${index + 1}번째 문서 보기`}
                   onClick={() => {
-                    setSelectedDocId(doc.id)
+                    setMobileSelectedDocId(doc.id)
                     mobileCarouselApi?.scrollTo(index)
                   }}
                   className={cn(
@@ -566,7 +576,8 @@ function ArchivePanel() {
         <article
           ref={detailPanelRef}
           className={cn(
-            "order-1 flex min-h-[320px] flex-col rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px] lg:overflow-hidden",
+            "order-1 flex min-h-[340px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px]",
+            mobileView === "list" ? "hidden lg:flex" : "flex",
             detailPulse && "border-primary/40 shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_14px_36px_rgba(15,23,42,0.28)]"
           )}
         >
@@ -575,6 +586,15 @@ function ArchivePanel() {
             <div className="h-1 w-full bg-gradient-to-r from-red-500/85 via-red-400/70 to-transparent" />
           )}
           <div className="border-b border-border/70 p-4">
+            <div className="mb-3 flex lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileView("list")}
+                className="inline-flex items-center rounded-full border border-border/70 bg-secondary/50 px-3 py-1.5 text-[10px] tracking-[0.16em] text-muted-foreground transition-colors hover:border-primary/35 hover:text-primary"
+              >
+                목록으로
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-primary">{selectedDoc.id}</span>
               <span
@@ -594,7 +614,7 @@ function ArchivePanel() {
             <p className="mt-1 text-xs text-muted-foreground">{selectedDoc.summary}</p>
           </div>
 
-          <div className="space-y-3 p-4 text-sm leading-relaxed text-foreground/90 lg:overflow-y-auto">
+          <div className="archive-scroll space-y-3 overflow-y-auto p-4 text-[13px] leading-7 text-foreground/90 sm:text-sm lg:text-sm lg:leading-relaxed">
             {selectedDoc.content.map((line, index) => {
               if (index >= revealedLineCount) return null
 
