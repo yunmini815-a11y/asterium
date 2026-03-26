@@ -131,7 +131,7 @@ function AuditPanel({
                   holder: "현좌 미공개",
                   state: "현좌 등록",
                   succession: "정통 계승",
-                  chronicle: "협회 내부 검증을 마친 뒤 권좌 기록이 지속 중입니다.",
+                  chronicle: "권좌 기록이 봉인되어 있습니다.",
                 },
               ],
             },
@@ -145,7 +145,7 @@ function AuditPanel({
             {
               title: "황혼의 천칭",
               domain: "『펜리르』",
-              holders: [{ seal: "TWI-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "협회 사법선 계열의 기록이 유지되고 있습니다." }],
+              holders: [{ seal: "TWI-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." }],
             },
             {
               title: "황혼의 천축",
@@ -162,7 +162,7 @@ function AuditPanel({
             {
               title: "여명의 천칭",
               domain: "『데스테라』",
-              holders: [{ seal: "DAY-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "개전 의례에 맞춰 권좌 기록이 봉인 유지됩니다." }],
+              holders: [{ seal: "DAY-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." }],
             },
             {
               title: "여명의 천축",
@@ -201,7 +201,7 @@ function AuditPanel({
             {
               title: "명멸의 천축",
               domain: "『에이트리』",
-              holders: [{ seal: "NIG-AX", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "명멸 협회의 고정축으로 봉인 등록되었습니다." }],
+              holders: [{ seal: "NIG-AX", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." }],
             },
           ],
         },
@@ -210,11 +210,11 @@ function AuditPanel({
           code: "FIXER ASCENDANCY",
           theme: "border-primary/25 bg-primary/10 text-primary",
           positions: [
-            { title: "화요의 찬탈자", domain: "『불길』", holders: [{ seal: "TUE-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "현장 집행 라인의 상위 권좌로 유지됩니다." }] },
-            { title: "수요의 찬탈자", domain: "『파도』", holders: [{ seal: "WED-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "정찰 계통 최고 권좌로 봉인 기록 중입니다." }] },
-            { title: "목요의 찬탈자", domain: "『바람』", holders: [{ seal: "THU-US", holder: "현좌 비공개", state: "공석 감시", succession: "재지정 대기", chronicle: "신규 현좌가 등록되면 즉시 권좌 문장이 갱신됩니다." }] },
-            { title: "금요의 찬탈자", domain: "『낙뢰』", holders: [{ seal: "FRI-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "계약 특권과 연결된 권좌가 유지되고 있습니다." }] },
-            { title: "토요의 찬탈자", domain: "『대지』", holders: [{ seal: "SAT-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "종결 의전의 최종 승인 권좌로 봉인됩니다." }] },
+            { title: "화요의 찬탈자", domain: "『불길』", holders: [{ seal: "TUE-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." }] },
+            { title: "수요의 찬탈자", domain: "『파도』", holders: [{ seal: "WED-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." }] },
+            { title: "목요의 찬탈자", domain: "『바람』", holders: [{ seal: "THU-US", holder: "현좌 비공개", state: "공석 감시", succession: "재지정 대기", chronicle: "권좌 기록이 봉인되어 있습니다." }] },
+            { title: "금요의 찬탈자", domain: "『낙뢰』", holders: [{ seal: "FRI-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." }] },
+            { title: "토요의 찬탈자", domain: "『대지』", holders: [{ seal: "SAT-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." }] },
           ],
         },
       ],
@@ -234,8 +234,8 @@ function AuditPanel({
               title: "카사 프리마",
               domain: "『근원』",
               holders: [
-                { seal: "CASA-I", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "가문 최상위 혈통권이 1석째에 유지됩니다." },
-                { seal: "CASA-II", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "복수 좌석 규약에 따라 2석째가 별도 봉인됩니다." },
+                { seal: "CASA-I", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." },
+                { seal: "CASA-II", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." },
               ],
             },
             {
@@ -243,8 +243,8 @@ function AuditPanel({
               domain: "『집정관』",
               holders: [
                 { seal: "CARM-I", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "셰니안의 권좌 기록이 유지되고 있습니다." },
-                { seal: "CARM-II", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "전장 지휘권이 카르멘 2석에 등록됩니다." },
-                { seal: "CARM-III", holder: "현좌 비공개", state: "변이 계승", succession: "포식 승계", chronicle: "전대 권좌를 포식한 뒤 실질 지휘권을 장악했다면 이 형식으로 남깁니다." },
+                { seal: "CARM-II", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." },
+                { seal: "CARM-III", holder: "현좌 비공개", state: "변이 계승", succession: "포식 승계", chronicle: "권좌 기록이 봉인되어 있습니다." },
               ],
             },
           ],
@@ -266,8 +266,8 @@ function AuditPanel({
               title: "메시아 뤼네",
               domain: "『날개』",
               holders: [
-                { seal: "MES-I", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "메시아 뤼네 1석이 활성 상태로 유지됩니다." },
-                { seal: "MES-II", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "메시아 뤼네 2석이 활성 상태로 유지됩니다." },
+                { seal: "MES-I", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "메이블의 권좌 기록이 유지되고 있습니다." },
+                { seal: "MES-II", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "권좌 기록이 봉인되어 있습니다." },
               ],
             },
           ],
@@ -1186,6 +1186,7 @@ export default function Dashboard() {
   useEffect(() => {
     const previousMenu = previousMenuRef.current
     previousMenuRef.current = activeMenu
+    const compactMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches
 
     if (activeMenu !== "audit") {
       setAuditIntroActive(false)
@@ -1202,28 +1203,35 @@ export default function Dashboard() {
     setAuditIntroStage(1)
     setAuditAfterglowActive(false)
 
+    const stageTwoDelay = compactMobile ? 460 : 950
+    const stageThreeDelay = compactMobile ? 920 : 1900
+    const aftermathDelay = compactMobile ? 0 : 2880
+    const closeDelay = compactMobile ? 1580 : 4480
+
     const stageTwoTimer = setTimeout(() => {
       setAuditIntroStage(2)
-    }, 950)
+    }, stageTwoDelay)
 
     const stageThreeTimer = setTimeout(() => {
       setAuditIntroStage(3)
-    }, 1900)
+    }, stageThreeDelay)
 
-    const aftermathTimer = setTimeout(() => {
-      setAuditAfterglowActive(true)
-    }, 2880)
+    const aftermathTimer = aftermathDelay
+      ? setTimeout(() => {
+          setAuditAfterglowActive(true)
+        }, aftermathDelay)
+      : null
 
     const closeTimer = setTimeout(() => {
       setAuditIntroActive(false)
       setAuditIntroStage(0)
       setAuditAfterglowActive(false)
-    }, 4480)
+    }, closeDelay)
 
     return () => {
       clearTimeout(stageTwoTimer)
       clearTimeout(stageThreeTimer)
-      clearTimeout(aftermathTimer)
+      if (aftermathTimer) clearTimeout(aftermathTimer)
       clearTimeout(closeTimer)
     }
   }, [activeMenu])
