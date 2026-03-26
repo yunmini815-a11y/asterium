@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
 import { Globe, Shield, Lock, FileText, Users, AlertTriangle, Fingerprint, Sparkles, ChevronRight } from "lucide-react"
 
@@ -254,10 +255,8 @@ function ArchivePanel() {
   const [mobileHintVisible, setMobileHintVisible] = useState(true)
   const [mobileNudgeActive, setMobileNudgeActive] = useState(false)
   const [detailPulse, setDetailPulse] = useState(false)
-  const [isDraggingMobileList, setIsDraggingMobileList] = useState(false)
+  const [mobileCarouselApi, setMobileCarouselApi] = useState<CarouselApi>()
   const detailPanelRef = useRef<HTMLElement>(null)
-  const mobileListRef = useRef<HTMLDivElement>(null)
-  const dragStartXRef = useRef<number | null>(null)
   const selectedDoc = documents.find((doc) => doc.id === selectedDocId) ?? documents[0]
   const selectedDocIndex = documents.findIndex((doc) => doc.id === selectedDocId)
 
@@ -295,16 +294,15 @@ function ArchivePanel() {
 
   useEffect(() => {
     const isMobile = window.innerWidth < 1024
-    if (!isMobile || !mobileListRef.current) return
+    if (!isMobile || !mobileCarouselApi) return
 
-    const container = mobileListRef.current
     const nudgeStart = window.setTimeout(() => {
       setMobileNudgeActive(true)
-      container.scrollTo({ left: 28, behavior: "smooth" })
+      mobileCarouselApi.scrollNext()
     }, 550)
 
     const nudgeReset = window.setTimeout(() => {
-      container.scrollTo({ left: 0, behavior: "smooth" })
+      mobileCarouselApi.scrollTo(0)
       setMobileNudgeActive(false)
     }, 1300)
 
@@ -312,20 +310,40 @@ function ArchivePanel() {
       window.clearTimeout(nudgeStart)
       window.clearTimeout(nudgeReset)
     }
-  }, [])
+  }, [mobileCarouselApi])
 
   useEffect(() => {
     const isMobile = window.innerWidth < 1024
     if (!isMobile) return
 
-    const activeCard = mobileListRef.current?.children[selectedDocIndex] as HTMLElement | undefined
-    activeCard?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+    mobileCarouselApi?.scrollTo(selectedDocIndex)
 
     setDetailPulse(true)
     const timer = window.setTimeout(() => setDetailPulse(false), 520)
 
     return () => window.clearTimeout(timer)
-  }, [selectedDocIndex])
+  }, [mobileCarouselApi, selectedDocIndex])
+
+  useEffect(() => {
+    if (!mobileCarouselApi) return
+
+    const syncSelectedDoc = () => {
+      const nextIndex = mobileCarouselApi.selectedScrollSnap()
+      const nextDoc = documents[nextIndex]
+      if (nextDoc && nextDoc.id !== selectedDocId) {
+        setSelectedDocId(nextDoc.id)
+      }
+    }
+
+    mobileCarouselApi.on("select", syncSelectedDoc)
+    mobileCarouselApi.on("reInit", syncSelectedDoc)
+    syncSelectedDoc()
+
+    return () => {
+      mobileCarouselApi.off("select", syncSelectedDoc)
+      mobileCarouselApi.off("reInit", syncSelectedDoc)
+    }
+  }, [documents, mobileCarouselApi, selectedDocId])
 
   return (
     <div className="flex h-full flex-col p-4 sm:p-6">
@@ -374,51 +392,31 @@ function ArchivePanel() {
           <div className="relative lg:hidden">
             <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-7 bg-gradient-to-r from-background via-background/70 to-transparent" />
             <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background via-background/75 to-transparent" />
-            <div
-              ref={mobileListRef}
-              className={cn(
-                "archive-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 scroll-smooth transition-transform duration-500 touch-pan-x",
-                mobileNudgeActive && "translate-x-1"
-              )}
-              onTouchStart={(event) => {
-                dragStartXRef.current = event.touches[0]?.clientX ?? null
-                setIsDraggingMobileList(false)
-              }}
-              onTouchMove={(event) => {
-                if (dragStartXRef.current === null) return
-                const deltaX = Math.abs((event.touches[0]?.clientX ?? 0) - dragStartXRef.current)
-                if (deltaX > 8) {
-                  setIsDraggingMobileList(true)
-                }
-              }}
-              onTouchEnd={() => {
-                window.setTimeout(() => {
-                  setIsDraggingMobileList(false)
-                  dragStartXRef.current = null
-                }, 80)
-              }}
+            <Carousel
+              setApi={setMobileCarouselApi}
+              opts={{ align: "start", dragFree: false, containScroll: "trimSnaps" }}
+              className={cn("transition-transform duration-500", mobileNudgeActive && "translate-x-1")}
             >
+              <CarouselContent className="archive-scroll ml-0 pb-2">
               {documents.map((doc) => {
                 const isActive = selectedDocId === doc.id
 
                 return (
-                  <button
-                    type="button"
-                    key={doc.id}
-                    onClick={() => {
-                      if (isDraggingMobileList) return
-                      setSelectedDocId(doc.id)
-                      if (window.innerWidth < 1024) {
-                        detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                      }
-                    }}
-                    className={`group relative w-[84vw] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[1.35rem] border p-3 text-left transition-all duration-300 sm:w-[68vw] ${
-                      isActive
-                        ? "scale-[1.01] border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25),0_18px_40px_rgba(2,6,23,0.28)]"
-                        : "scale-[0.985] border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
-                    }`}
-                    style={{ touchAction: "pan-x" }}
-                  >
+                  <CarouselItem key={doc.id} className="basis-[84vw] pl-3 sm:basis-[68vw]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDocId(doc.id)
+                        if (window.innerWidth < 1024) {
+                          detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                        }
+                      }}
+                      className={`group relative w-full overflow-hidden rounded-[1.35rem] border p-3 text-left transition-all duration-300 ${
+                        isActive
+                          ? "scale-[1.01] border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25),0_18px_40px_rgba(2,6,23,0.28)]"
+                          : "scale-[0.985] border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
+                      }`}
+                    >
                     <div
                       className={cn(
                         "pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.14),transparent_38%)] transition-opacity duration-300",
@@ -480,10 +478,12 @@ function ArchivePanel() {
                         />
                       </div>
                     </div>
-                  </button>
+                    </button>
+                  </CarouselItem>
                 )
               })}
-            </div>
+              </CarouselContent>
+            </Carousel>
           </div>
 
           <div className="mt-2 flex items-center justify-center gap-1.5 lg:hidden">
@@ -496,11 +496,7 @@ function ArchivePanel() {
                   aria-label={`${index + 1}번째 문서 보기`}
                   onClick={() => {
                     setSelectedDocId(doc.id)
-                    mobileListRef.current?.children[index]?.scrollIntoView({
-                      behavior: "smooth",
-                      inline: "center",
-                      block: "nearest",
-                    })
+                    mobileCarouselApi?.scrollTo(index)
                   }}
                   className={cn(
                     "h-1.5 rounded-full transition-all duration-200",
