@@ -16,7 +16,7 @@ function WorldviewPanel() {
   ]
 
   return (
-    <div className="flex h-full flex-col p-4 sm:p-6">
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4 sm:p-6 lg:overflow-hidden">
       <div className="mb-5 sm:mb-6">
         <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
           <Globe className="h-5 w-5 text-primary" />
@@ -364,7 +364,7 @@ function ArchivePanel() {
           <AlertTriangle className="h-4 w-4" />
           <span className="text-xs font-medium">보안 경고</span>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-[15px] leading-7 text-muted-foreground sm:text-xs sm:leading-normal">
           본 영역의 모든 접근 및 열람 기록은 보안 시스템에 의해 자동 기록됩니다.
           무단 복제 또는 외부 유출 시 협회 규정에 따라 처리됩니다.
         </p>
@@ -378,7 +378,7 @@ function ArchivePanel() {
       >
         <div>
           <p className="text-[10px] tracking-[0.24em] text-primary/85">ARCHIVE SLIDE</p>
-          <p className="mt-1 text-xs text-muted-foreground">문서를 좌우로 넘겨 다른 기록을 확인하세요.</p>
+          <p className="mt-1 text-[15px] leading-6 text-muted-foreground">문서를 좌우로 넘겨 다른 기록을 확인하세요.</p>
         </div>
         <div className="flex items-center gap-1 text-primary/80">
           <span className="text-[10px] tracking-widest">SWIPE</span>
@@ -389,7 +389,7 @@ function ArchivePanel() {
         </div>
       </div>
 
-      <div className="grid gap-3 lg:flex-1 lg:overflow-hidden lg:grid-cols-2">
+      <div className="grid gap-4 pb-5 lg:flex-1 lg:overflow-hidden lg:gap-3 lg:pb-0 lg:grid-cols-2">
         <div className="order-2 lg:order-1">
           <div className="relative lg:hidden">
             <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-7 bg-gradient-to-r from-background via-background/70 to-transparent" />
@@ -419,7 +419,7 @@ function ArchivePanel() {
                           })
                         }
                       }}
-                      className={`group relative w-full overflow-hidden rounded-[1.35rem] border p-3 text-left transition-all duration-300 ${
+                      className={`group relative w-full overflow-hidden rounded-[1.35rem] border p-4 text-left transition-all duration-300 ${
                         isActive
                           ? "scale-[1.01] border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25),0_18px_40px_rgba(2,6,23,0.28)]"
                           : "scale-[0.985] border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
@@ -434,14 +434,14 @@ function ArchivePanel() {
                     {doc.level === "기밀" && (
                       <span className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-red-400/95 via-red-500/80 to-red-700/65" />
                     )}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between text-[10px] tracking-[0.18em] text-muted-foreground">
                         <span>
                           {String(documents.findIndex((item) => item.id === doc.id) + 1).padStart(2, "0")} / {String(documents.length).padStart(2, "0")}
                         </span>
                         <span>{isActive ? "ACTIVE FILE" : "ARCHIVE FILE"}</span>
                       </div>
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                             <FileText className="h-4 w-4 text-primary" />
@@ -461,12 +461,12 @@ function ArchivePanel() {
                                 {doc.level}
                               </span>
                             </div>
-                            <p className="mt-0.5 line-clamp-1 text-sm text-foreground">{doc.title}</p>
+                            <p className="mt-1 line-clamp-1 text-base leading-6 text-foreground sm:text-sm sm:leading-normal">{doc.title}</p>
                           </div>
                         </div>
                         <span className="text-xs text-muted-foreground">{doc.date}</span>
                       </div>
-                      <p className="line-clamp-2 text-[11px] text-muted-foreground">{doc.summary}</p>
+                      <p className="line-clamp-2 text-[14px] leading-6 text-muted-foreground sm:text-[11px] sm:leading-normal">{doc.summary}</p>
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] tracking-[0.14em] text-primary/85">
                           {isActive ? "SELECTED RECORD" : "TAP TO OPEN"}
@@ -576,7 +576,7 @@ function ArchivePanel() {
         <article
           ref={detailPanelRef}
           className={cn(
-            "order-1 flex min-h-[340px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px]",
+            "relative order-1 flex min-h-[360px] flex-col overflow-visible rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px] lg:overflow-hidden",
             mobileView === "list" ? "hidden lg:flex" : "flex",
             detailPulse && "border-primary/40 shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_14px_36px_rgba(15,23,42,0.28)]"
           )}
@@ -585,12 +585,12 @@ function ArchivePanel() {
           {selectedDoc.level === "기밀" && (
             <div className="h-1 w-full bg-gradient-to-r from-red-500/85 via-red-400/70 to-transparent" />
           )}
-          <div className="border-b border-border/70 p-4">
+          <div className="border-b border-border/70 p-5 sm:p-4">
             <div className="mb-3 flex lg:hidden">
               <button
                 type="button"
                 onClick={() => setMobileView("list")}
-                className="inline-flex items-center rounded-full border border-border/70 bg-secondary/50 px-3 py-1.5 text-[10px] tracking-[0.16em] text-muted-foreground transition-colors hover:border-primary/35 hover:text-primary"
+                className="inline-flex items-center rounded-full border border-border/70 bg-secondary/50 px-3.5 py-2 text-xs tracking-[0.14em] text-muted-foreground transition-colors hover:border-primary/35 hover:text-primary"
               >
                 목록으로
               </button>
@@ -608,13 +608,13 @@ function ArchivePanel() {
               >
                 {selectedDoc.level}
               </span>
-              <span className="ml-auto text-xs text-muted-foreground">{selectedDoc.date}</span>
+              <span className="ml-auto text-[15px] text-muted-foreground sm:text-xs">{selectedDoc.date}</span>
             </div>
-            <h3 className="mt-2 text-base font-semibold text-foreground">{selectedDoc.title}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{selectedDoc.summary}</p>
+            <h3 className="mt-3 text-[22px] font-semibold leading-8 text-foreground sm:text-base sm:leading-normal">{selectedDoc.title}</h3>
+            <p className="mt-3 text-[15px] leading-7 text-muted-foreground sm:mt-1 sm:text-xs sm:leading-normal">{selectedDoc.summary}</p>
           </div>
 
-          <div className="archive-scroll space-y-3 overflow-y-auto p-4 text-[13px] leading-7 text-foreground/90 sm:text-sm lg:text-sm lg:leading-relaxed">
+          <div className="archive-scroll flex-1 space-y-5 overflow-visible px-5 py-5 pb-8 text-base leading-8 text-foreground/90 sm:p-4 sm:text-sm sm:leading-7 lg:overflow-y-auto lg:text-sm lg:leading-relaxed">
             {selectedDoc.content.map((line, index) => {
               if (index >= revealedLineCount) return null
 
