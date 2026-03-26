@@ -6,8 +6,9 @@ import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { dashboardMenuItems } from "../lib/dashboard-menu"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Globe, Shield, Lock, FileText, Users, AlertTriangle, Fingerprint, Sparkles, ChevronRight } from "lucide-react"
+import { Globe, Shield, Lock, FileText, Users, AlertTriangle, Fingerprint, Sparkles, ChevronRight, X } from "lucide-react"
 
 function WorldviewPanel() {
   const worldviewData = [
@@ -92,6 +93,7 @@ function AuditPanel({
   introStage?: number
   aftermathActive?: boolean
 }) {
+  const isMobile = useIsMobile()
   const waveStyle = (order: number, extra?: CSSProperties): CSSProperties => ({
     ...(extra ?? {}),
     "--wave-order": order,
@@ -352,11 +354,115 @@ function AuditPanel({
     0
   )
   const mobileHeroHighlights = [
-    { label: "LUNAR CLAIMANTS", detail: "정점 포함 찬탈자 7석" },
+    { label: "LUNAR USURPER", detail: "정점 포함 찬탈자 7석" },
     { label: "BALANCE / AXIS", detail: "사대협회 천칭 및 천축 8석" },
     { label: "NOCTAR OVERLORDS", detail: "네메시스와 뤼네 상층 9석" },
     { label: "ACCESS GRADE", detail: "알파 등급 이상 열람 허가" },
   ]
+  const [selectedThrone, setSelectedThrone] = useState<null | {
+    realm: string
+    realmCode: string
+    organizationName: string
+    organizationCode: string
+    organizationTheme: string
+    organizationSeats: number
+    positionTitle: string
+    positionDomain: string
+    holderSeal: string
+    holderName: string
+    holderState: string
+    holderSuccession: string
+    holderChronicle: string
+  }>(null)
+
+  const openThroneDetails = ({
+    realm,
+    realmCode,
+    organizationName,
+    organizationCode,
+    organizationTheme,
+    organizationSeats,
+    positionTitle,
+    positionDomain,
+    holder,
+  }: {
+    realm: string
+    realmCode: string
+    organizationName: string
+    organizationCode: string
+    organizationTheme: string
+    organizationSeats: number
+    positionTitle: string
+    positionDomain: string
+    holder: {
+      seal: string
+      holder: string
+      state: string
+      succession: string
+      chronicle: string
+    }
+  }) => {
+    setSelectedThrone({
+      realm,
+      realmCode,
+      organizationName,
+      organizationCode,
+      organizationTheme,
+      organizationSeats,
+      positionTitle,
+      positionDomain,
+      holderSeal: holder.seal,
+      holderName: holder.holder,
+      holderState: holder.state,
+      holderSuccession: holder.succession,
+      holderChronicle: holder.chronicle,
+    })
+  }
+
+  const throneDetailBody = selectedThrone ? (
+    <div className="throne-detail-panel throne-detail-scan space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] tracking-[0.18em] text-primary">
+          {selectedThrone.realm}
+        </span>
+        <span className={cn("rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em]", selectedThrone.organizationTheme)}>
+          {selectedThrone.organizationName}
+        </span>
+        <span className="rounded-full border border-white/10 bg-black/15 px-2.5 py-1 font-mono text-[10px] text-foreground/85">
+          {selectedThrone.holderSeal}
+        </span>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "직위", value: selectedThrone.positionTitle },
+          { label: "칭호", value: selectedThrone.positionDomain },
+          { label: "소속 좌석", value: `${selectedThrone.organizationSeats} SEATS` },
+        ].map((item) => (
+          <div key={item.label} className="rounded-[1rem] border border-white/10 bg-black/18 px-3 py-3">
+            <p className="text-[10px] tracking-[0.16em] text-muted-foreground">{item.label}</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-[1rem] border border-white/10 bg-black/18 px-3 py-3">
+          <p className="text-[10px] tracking-[0.16em] text-muted-foreground">현좌 상태</p>
+          <p className="mt-2 text-sm leading-6 text-foreground">{selectedThrone.holderState}</p>
+        </div>
+        <div className="rounded-[1rem] border border-white/10 bg-black/18 px-3 py-3">
+          <p className="text-[10px] tracking-[0.16em] text-muted-foreground">승계 형식</p>
+          <p className="mt-2 text-sm leading-6 text-foreground">{selectedThrone.holderSuccession}</p>
+        </div>
+      </div>
+
+      <div className="rounded-[1.05rem] border border-white/10 bg-black/18 px-3 py-3.5">
+        <p className="text-[10px] tracking-[0.16em] text-muted-foreground">의전 기록</p>
+        <p className="mt-2 text-sm leading-7 text-foreground/90">{selectedThrone.holderChronicle}</p>
+      </div>
+    </div>
+  ) : null
 
   return (
     <div
@@ -369,6 +475,43 @@ function AuditPanel({
         introStage >= 3 && "throne-stage-three"
       )}
     >
+      {selectedThrone ? (
+        <div className="fixed inset-0 z-[70] bg-black/65 backdrop-blur-sm" onClick={() => setSelectedThrone(null)}>
+          <div
+            className={cn(
+              "throne-detail-shell absolute border border-border/70 bg-[linear-gradient(180deg,rgba(8,14,24,0.98)_0%,rgba(10,16,26,0.99)_100%)] shadow-[0_24px_70px_-28px_rgba(0,0,0,0.78)]",
+              isMobile
+                ? "inset-x-0 bottom-0 max-h-[78vh] rounded-t-[1.6rem]"
+                : "left-1/2 top-1/2 w-[min(42rem,calc(100%-2rem))] max-h-[82vh] -translate-x-1/2 -translate-y-1/2 rounded-[1.5rem]"
+            )}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className={cn("border-b border-white/10", isMobile ? "px-4 pb-4 pt-5" : "px-6 pb-4 pt-6")}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className={cn("tracking-[-0.03em] text-foreground", isMobile ? "text-[1.1rem]" : "text-[1.4rem]")}>{selectedThrone.positionTitle}</p>
+                  <p className={cn("mt-1 text-muted-foreground", isMobile ? "text-[12px] leading-6" : "text-[13px] leading-6")}>
+                    {selectedThrone.organizationCode} · {selectedThrone.realmCode}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedThrone(null)}
+                  className="rounded-full border border-white/10 bg-white/5 p-2 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                  aria-label="권좌 상세 닫기"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className={cn("overflow-y-auto", isMobile ? "max-h-[calc(78vh-5.4rem)] px-4 pb-6 pt-4" : "max-h-[calc(82vh-5.75rem)] px-6 pb-6 pt-5")}>
+              {throneDetailBody}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div
         aria-hidden
         className={cn(
@@ -407,7 +550,7 @@ function AuditPanel({
             {[
               ["01", "SEAL ROUTE", "봉인 해제 절차 개시"],
               ["02", "CHAIN BREAK", "구속 해제 절차 개시"],
-              ["03", "THRONE INDEX", "권좌 기록 절차 개시"],
+              ["03", "THRONE INDEX", " 기록 해제 절차 개시"],
             ].map(([code, label, detail], index) => (
               <div
                 key={code}
@@ -607,9 +750,21 @@ function AuditPanel({
                                 const holder = position.holders[0]
 
                                 return (
-                                  <div
+                                  <button
                                     key={`${organization.name}-${position.title}-mobile`}
-                                    className="throne-position-card throne-mobile-snap-card throne-mobile-snap-fixer min-w-[15.2rem] rounded-[1.05rem] border border-white/8 bg-black/16 p-3"
+                                    type="button"
+                                    onClick={() => holder && openThroneDetails({
+                                      realm: realm.realm,
+                                      realmCode: realm.code,
+                                      organizationName: organization.name,
+                                      organizationCode: organization.code,
+                                      organizationTheme: organization.theme,
+                                      organizationSeats,
+                                      positionTitle: position.title,
+                                      positionDomain: position.domain,
+                                      holder,
+                                    })}
+                                    className="throne-clickable-seat throne-position-card throne-mobile-snap-card throne-mobile-snap-fixer min-w-[15.2rem] rounded-[1.05rem] border border-white/8 bg-black/16 p-3"
                                   >
                                     <div className="flex items-start justify-between gap-2">
                                       <div>
@@ -627,7 +782,7 @@ function AuditPanel({
                                         <p className="throne-chronicle-clamp text-[11px] leading-5 text-muted-foreground">{holder.chronicle}</p>
                                       </div>
                                     ) : null}
-                                  </div>
+                                  </button>
                                 )
                               })}
                             </div>
@@ -637,9 +792,21 @@ function AuditPanel({
                               const holder = position.holders[0]
 
                               return (
-                                <div
+                                <button
                                   key={`${organization.name}-${position.title}`}
-                                  className="throne-position-card throne-panel-enter rounded-[1.05rem] border border-white/8 bg-black/14 p-3"
+                                  type="button"
+                                  onClick={() => holder && openThroneDetails({
+                                    realm: realm.realm,
+                                    realmCode: realm.code,
+                                    organizationName: organization.name,
+                                    organizationCode: organization.code,
+                                    organizationTheme: organization.theme,
+                                    organizationSeats,
+                                    positionTitle: position.title,
+                                    positionDomain: position.domain,
+                                    holder,
+                                  })}
+                                  className="throne-clickable-seat throne-position-card throne-panel-enter rounded-[1.05rem] border border-white/8 bg-black/14 p-3"
                                   style={{ animationDelay: `${220 + positionIndex * 55}ms` }}
                                 >
                                   <div className="flex items-start justify-between gap-2">
@@ -657,7 +824,7 @@ function AuditPanel({
                                       <p className="text-[11px] text-muted-foreground">{holder.chronicle}</p>
                                     </div>
                                   ) : null}
-                                </div>
+                                </button>
                               )
                             })}
                             </div>
@@ -697,12 +864,27 @@ function AuditPanel({
 
                                   <div className="mt-3 space-y-2">
                                     {position.holders.map((holder) => (
-                                      <div key={holder.seal} className="throne-seat-shell rounded-xl border px-3 py-3">
+                                      <button
+                                        key={holder.seal}
+                                        type="button"
+                                        onClick={() => openThroneDetails({
+                                          realm: realm.realm,
+                                          realmCode: realm.code,
+                                          organizationName: organization.name,
+                                          organizationCode: organization.code,
+                                          organizationTheme: organization.theme,
+                                          organizationSeats,
+                                          positionTitle: position.title,
+                                          positionDomain: position.domain,
+                                          holder,
+                                        })}
+                                        className="throne-clickable-seat throne-seat-shell block w-full rounded-xl border px-3 py-3 text-left"
+                                      >
                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                           <span className="font-mono text-[11px] tracking-[0.16em] text-sky-100/90">{holder.seal}</span>
                                         </div>
                                         <p className="throne-chronicle-clamp mt-2 text-[12px] leading-6 text-muted-foreground">{holder.chronicle}</p>
-                                      </div>
+                                      </button>
                                     ))}
                                   </div>
                                 </div>
@@ -728,12 +910,22 @@ function AuditPanel({
 
                                 <div className="mt-3 space-y-2.5">
                                   {position.holders.map((holder) => (
-                                    <div key={holder.seal} className="throne-seat-shell throne-panel-enter rounded-xl border px-3 py-3" style={{ animationDelay: `${(realm.organizations.findIndex((item) => item.name === organization.name) * 80) + (position.holders.findIndex((item) => item.seal === holder.seal) * 55)}ms` }}>
+                                    <button key={holder.seal} type="button" onClick={() => openThroneDetails({
+                                      realm: realm.realm,
+                                      realmCode: realm.code,
+                                      organizationName: organization.name,
+                                      organizationCode: organization.code,
+                                      organizationTheme: organization.theme,
+                                      organizationSeats,
+                                      positionTitle: position.title,
+                                      positionDomain: position.domain,
+                                      holder,
+                                    })} className="throne-clickable-seat throne-seat-shell throne-panel-enter block w-full rounded-xl border px-3 py-3 text-left" style={{ animationDelay: `${(realm.organizations.findIndex((item) => item.name === organization.name) * 80) + (position.holders.findIndex((item) => item.seal === holder.seal) * 55)}ms` }}>
                                       <div className="flex flex-wrap items-center justify-between gap-2">
                                         <span className="font-mono text-[11px] tracking-[0.16em] text-primary/90">{holder.seal}</span>
                                       </div>
                                       <p className="throne-chronicle-clamp mt-2 text-[12px] leading-6 text-muted-foreground">{holder.chronicle}</p>
-                                    </div>
+                                    </button>
                                   ))}
                                 </div>
                               </div>
