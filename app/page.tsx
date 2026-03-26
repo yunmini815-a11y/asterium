@@ -313,10 +313,12 @@ function ArchivePanel() {
   }, [mobileCarouselApi])
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 1024
-    if (!isMobile) return
+    if (!mobileCarouselApi) return
 
-    mobileCarouselApi?.scrollTo(selectedDocIndex)
+    const currentIndex = mobileCarouselApi.selectedScrollSnap()
+    if (currentIndex !== selectedDocIndex) {
+      mobileCarouselApi.scrollTo(selectedDocIndex)
+    }
 
     setDetailPulse(true)
     const timer = window.setTimeout(() => setDetailPulse(false), 520)
@@ -394,19 +396,22 @@ function ArchivePanel() {
             <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background via-background/75 to-transparent" />
             <Carousel
               setApi={setMobileCarouselApi}
-              opts={{ align: "start", dragFree: false, containScroll: "trimSnaps" }}
-              className={cn("transition-transform duration-500", mobileNudgeActive && "translate-x-1")}
+              opts={{ align: "start", dragFree: false, containScroll: "trimSnaps", skipSnaps: false }}
+              className={cn("px-1 transition-transform duration-500", mobileNudgeActive && "translate-x-1")}
             >
-              <CarouselContent className="archive-scroll ml-0 pb-2">
+              <CarouselContent className="archive-scroll -ml-2 pb-2 pr-10">
               {documents.map((doc) => {
                 const isActive = selectedDocId === doc.id
 
                 return (
-                  <CarouselItem key={doc.id} className="basis-[84vw] pl-3 sm:basis-[68vw]">
+                  <CarouselItem key={doc.id} className="basis-[calc(100vw-2.5rem)] pl-2 sm:basis-[68vw]">
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedDocId(doc.id)
+                        if (!isActive) {
+                          setSelectedDocId(doc.id)
+                          mobileCarouselApi?.scrollTo(documents.findIndex((item) => item.id === doc.id))
+                        }
                         if (window.innerWidth < 1024) {
                           detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
                         }
