@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { type CSSProperties, useEffect, useRef, useState } from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
@@ -83,7 +83,20 @@ function WorldviewPanel() {
   )
 }
 
-function AuditPanel({ introActive = false }: { introActive?: boolean }) {
+function AuditPanel({
+  introActive = false,
+  introStage = 0,
+  aftermathActive = false,
+}: {
+  introActive?: boolean
+  introStage?: number
+  aftermathActive?: boolean
+}) {
+  const waveStyle = (order: number, extra?: CSSProperties): CSSProperties => ({
+    ...(extra ?? {}),
+    "--wave-order": order,
+  } as CSSProperties)
+
   const throneArchives = [
     {
       realm: "엘모라",
@@ -98,23 +111,23 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           positions: [
             {
               title: "일요의 찬탈자",
-              domain: "월식 권역 절대 명령",
+              domain: "『정점』",
               holders: [
                 {
-                  seal: "SUN-01",
+                  seal: "SUN-US",
                   holder: "현좌 미공개",
                   state: "봉인 유지",
                   succession: "기록 봉인",
-                  chronicle: "신규 현좌가 전대 일요의 찬탈자를 포식했다면 이 칸을 '포식 승계'로 갱신하면 됩니다.",
+                  chronicle: "진의 권좌 기록이 유지되고 있습니다.",
                 },
               ],
             },
             {
               title: "월요의 찬탈자",
-              domain: "월식 협회장 직결 권좌",
+              domain: "『정점』",
               holders: [
                 {
-                  seal: "MON-01",
+                  seal: "MON-US",
                   holder: "현좌 미공개",
                   state: "현좌 등록",
                   succession: "정통 계승",
@@ -131,13 +144,13 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           positions: [
             {
               title: "황혼의 천칭",
-              domain: "판결 및 중재",
+              domain: "『펜리르』",
               holders: [{ seal: "TWI-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "협회 사법선 계열의 기록이 유지되고 있습니다." }],
             },
             {
               title: "황혼의 천축",
-              domain: "질서 고정축",
-              holders: [{ seal: "TWI-AX", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "협회 축 권한이 안정적으로 유지 중입니다." }],
+              domain: "『글레이프니르』",
+              holders: [{ seal: "TWI-AX", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "헨리 아서의 권좌 기록이 유지되고 있습니다." }],
             },
           ],
         },
@@ -148,13 +161,13 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           positions: [
             {
               title: "여명의 천칭",
-              domain: "개전 및 조율",
+              domain: "『데스테라』",
               holders: [{ seal: "DAY-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "개전 의례에 맞춰 권좌 기록이 봉인 유지됩니다." }],
             },
             {
               title: "여명의 천축",
-              domain: "전선 유지축",
-              holders: [{ seal: "DAY-AX", holder: "현좌 비공개", state: "봉인 유지", succession: "기록 봉인", chronicle: "축 권한은 유지되나 세부 현좌 정보는 비공개 상태입니다." }],
+              domain: "『달리움』",
+              holders: [{ seal: "DAY-AX", holder: "현좌 비공개", state: "봉인 유지", succession: "기록 봉인", chronicle: "엘리르 세레인의 권좌 기록이 유지되고 있습니다." }],
             },
           ],
         },
@@ -165,13 +178,13 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           positions: [
             {
               title: "서광의 천칭",
-              domain: "정책 측정선",
-              holders: [{ seal: "AUR-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "중앙 통제실 의전 로그와 동기화되어 있습니다." }],
+              domain: "『사서』",
+              holders: [{ seal: "LUM-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "시안의 권좌 기록이 유지되고 있습니다." }],
             },
             {
               title: "서광의 천축",
-              domain: "중앙 고정축",
-              holders: [{ seal: "AUR-AX", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "서광 중앙 기조를 지탱하는 권좌로 등록됩니다." }],
+              domain: "『서기』",
+              holders: [{ seal: "LUM-AX", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "아바의 권좌 기록이 유지되고 있습니다." }],
             },
           ],
         },
@@ -182,12 +195,12 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           positions: [
             {
               title: "명멸의 천칭",
-              domain: "은폐 및 잠행 심판",
-              holders: [{ seal: "NIG-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "잠행 라인 의전 기록이 장막 하에 유지됩니다." }],
+              domain: "『슈나이더』",
+              holders: [{ seal: "NIG-BL", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "이드레타의 권좌 기록이 유지되고 있습니다." }],
             },
             {
               title: "명멸의 천축",
-              domain: "야전 잠식축",
+              domain: "『에이트리』",
               holders: [{ seal: "NIG-AX", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "명멸 협회의 고정축으로 봉인 등록되었습니다." }],
             },
           ],
@@ -197,11 +210,11 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           code: "FIXER ASCENDANCY",
           theme: "border-primary/25 bg-primary/10 text-primary",
           positions: [
-            { title: "화요의 찬탈자", domain: "타격 및 집행", holders: [{ seal: "TUE-01", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "현장 집행 라인의 상위 권좌로 유지됩니다." }] },
-            { title: "수요의 찬탈자", domain: "정찰 및 추적", holders: [{ seal: "WED-01", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "정찰 계통 최고 권좌로 봉인 기록 중입니다." }] },
-            { title: "목요의 찬탈자", domain: "교섭 및 관문", holders: [{ seal: "THU-01", holder: "현좌 비공개", state: "공석 감시", succession: "재지정 대기", chronicle: "신규 현좌가 등록되면 즉시 권좌 문장이 갱신됩니다." }] },
-            { title: "금요의 찬탈자", domain: "계약 및 보증", holders: [{ seal: "FRI-01", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "계약 특권과 연결된 권좌가 유지되고 있습니다." }] },
-            { title: "토요의 찬탈자", domain: "철수 및 종결", holders: [{ seal: "SAT-01", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "종결 의전의 최종 승인 권좌로 봉인됩니다." }] },
+            { title: "화요의 찬탈자", domain: "『불길』", holders: [{ seal: "TUE-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "현장 집행 라인의 상위 권좌로 유지됩니다." }] },
+            { title: "수요의 찬탈자", domain: "『파도』", holders: [{ seal: "WED-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "정찰 계통 최고 권좌로 봉인 기록 중입니다." }] },
+            { title: "목요의 찬탈자", domain: "『바람』", holders: [{ seal: "THU-US", holder: "현좌 비공개", state: "공석 감시", succession: "재지정 대기", chronicle: "신규 현좌가 등록되면 즉시 권좌 문장이 갱신됩니다." }] },
+            { title: "금요의 찬탈자", domain: "『낙뢰』", holders: [{ seal: "FRI-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "계약 특권과 연결된 권좌가 유지되고 있습니다." }] },
+            { title: "토요의 찬탈자", domain: "『대지』", holders: [{ seal: "SAT-US", holder: "현좌 비공개", state: "현좌 등록", succession: "정통 계승", chronicle: "종결 의전의 최종 승인 권좌로 봉인됩니다." }] },
           ],
         },
       ],
@@ -209,7 +222,7 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
     {
       realm: "녹타르",
       code: "NOCTAR BLOODLINE LEDGER",
-      summary: "네메시스와 뤼네의 상층 혈통권, 실질 권한 계보, 복수 좌석이 허용된 고정 권좌를 묶은 야권 명부.",
+      summary: "네메시스와 뤼네의 상층부. 녹타르를 양분하는 두 조직의 권력 구조를 기록한 명부.",
       accent: "from-fuchsia-400/18 via-rose-400/8 to-transparent",
       organizations: [
         {
@@ -219,7 +232,7 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           positions: [
             {
               title: "카사 프리마",
-              domain: "초기 혈통권",
+              domain: "『근원』",
               holders: [
                 { seal: "CASA-I", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "가문 최상위 혈통권이 1석째에 유지됩니다." },
                 { seal: "CASA-II", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "복수 좌석 규약에 따라 2석째가 별도 봉인됩니다." },
@@ -227,9 +240,9 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
             },
             {
               title: "카르멘",
-              domain: "실전 지휘권",
+              domain: "『집정관』",
               holders: [
-                { seal: "CARM-I", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "전장 지휘권이 카르멘 1석에 등록됩니다." },
+                { seal: "CARM-I", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "셰니안의 권좌 기록이 유지되고 있습니다." },
                 { seal: "CARM-II", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "전장 지휘권이 카르멘 2석에 등록됩니다." },
                 { seal: "CARM-III", holder: "현좌 비공개", state: "변이 계승", succession: "포식 승계", chronicle: "전대 권좌를 포식한 뒤 실질 지휘권을 장악했다면 이 형식으로 남깁니다." },
               ],
@@ -238,20 +251,20 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
         },
         {
           name: "뤼네",
-          code: "LUNE",
+          code: "LUINAE",
           theme: "border-rose-400/20 bg-rose-500/10 text-rose-100",
           positions: [
             {
               title: "헤더 뤼네",
-              domain: "상층 혈계 의전",
+              domain: "『승천자』",
               holders: [
-                { seal: "HEA-I", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "헤더 뤼네 1석의 가계 기록이 보존됩니다." },
-                { seal: "HEA-II", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "헤더 뤼네 2석의 의전 기록이 보존됩니다." },
+                { seal: "HEA-I", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "이벨리스의 권좌 기록이 유지되고 있습니다." },
+                { seal: "HEA-II", holder: "현좌 비공개", state: "혈통 유지", succession: "혈통 계승", chronicle: "이졸데의 권좌 기록이 유지되고 있습니다." },
               ],
             },
             {
               title: "메시아 뤼네",
-              domain: "구심 및 강림 의전",
+              domain: "『날개』",
               holders: [
                 { seal: "MES-I", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "메시아 뤼네 1석이 활성 상태로 유지됩니다." },
                 { seal: "MES-II", holder: "현좌 비공개", state: "현좌 등록", succession: "혈통 계승", chronicle: "메시아 뤼네 2석이 활성 상태로 유지됩니다." },
@@ -290,21 +303,66 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
       ratio: Math.round((seats / totalSeats) * 100),
     }
   })
-  const successionFormats = [
-    { label: "정통 계승", detail: "협회 혹은 가계 의전을 통해 공식 승계를 완료한 경우" },
-    { label: "포식 승계", detail: "전대 권좌를 먹은 뒤 권능과 좌석을 통째로 흡수한 경우" },
-    { label: "혈통 계승", detail: "가문 또는 혈통 규약으로 좌석이 이어지는 경우" },
-    { label: "재지정 대기", detail: "공석이나 폐좌 이후 후속 현좌가 지정되기 전 단계" },
-  ]
-  const statusTone = (state: string) => {
-    if (state.includes("포식") || state.includes("변이")) return "border-red-400/25 bg-red-500/10 text-red-100"
-    if (state.includes("공석")) return "border-amber-400/25 bg-amber-500/10 text-amber-100"
-    if (state.includes("혈통")) return "border-fuchsia-400/25 bg-fuchsia-500/10 text-fuchsia-100"
-    return "border-primary/25 bg-primary/10 text-primary"
-  }
+  const elmoraOrganizations = throneArchives.find((realm) => realm.realm === "엘모라")?.organizations.filter((organization) => organization.code !== "FIXER ASCENDANCY") ?? []
+  const fixerClaimants = throneArchives
+    .flatMap((realm) => realm.organizations)
+    .find((organization) => organization.code === "FIXER ASCENDANCY")?.positions ?? []
+  const noctarOrganizations = throneArchives.find((realm) => realm.realm === "녹타르")?.organizations ?? []
+  const elmoraSeatCount = elmoraOrganizations.reduce(
+    (sum, organization) => sum + organization.positions.reduce((inner, position) => inner + position.holders.length, 0),
+    0
+  )
+  const elmoraAxisCount = elmoraOrganizations
+    .filter((organization) => organization.code !== "ECLIPSE ORDER")
+    .reduce((sum, organization) => sum + organization.positions.length, 0)
+  const elmoraSealedCount = elmoraOrganizations.reduce(
+    (sum, organization) =>
+      sum +
+      organization.positions.reduce(
+        (inner, position) => inner + position.holders.filter((holder) => holder.state.includes("봉인")).length,
+        0
+      ),
+    0
+  )
+  const fixerVacantCount = fixerClaimants.reduce(
+    (sum, position) => sum + position.holders.filter((holder) => holder.state.includes("공석") || holder.succession.includes("대기")).length,
+    0
+  )
+  const fixerSignalDomains = fixerClaimants.map((position) => position.domain.replace(/[『』]/g, ""))
+  const noctarSeatCount = noctarOrganizations.reduce(
+    (sum, organization) => sum + organization.positions.reduce((inner, position) => inner + position.holders.length, 0),
+    0
+  )
+  const noctarBloodCount = noctarOrganizations.reduce(
+    (sum, organization) =>
+      sum +
+      organization.positions.reduce(
+        (inner, position) => inner + position.holders.filter((holder) => holder.state.includes("혈통")).length,
+        0
+      ),
+    0
+  )
+  const noctarMutationCount = noctarOrganizations.reduce(
+    (sum, organization) =>
+      sum +
+      organization.positions.reduce(
+        (inner, position) => inner + position.holders.filter((holder) => holder.state.includes("변이") || holder.succession.includes("포식")).length,
+        0
+      ),
+    0
+  )
 
   return (
-    <div className="throne-vault relative flex h-full min-h-0 flex-col overflow-y-auto p-4 sm:p-6 lg:overflow-hidden">
+    <div
+      className={cn(
+        "throne-vault relative flex h-full min-h-0 flex-col overflow-y-auto p-4 sm:p-6 lg:overflow-hidden",
+        introActive && "throne-activation-live",
+        aftermathActive && "throne-afterglow-live",
+        introStage === 1 && "throne-stage-one",
+        introStage === 2 && "throne-stage-two",
+        introStage >= 3 && "throne-stage-three"
+      )}
+    >
       <div
         aria-hidden
         className={cn(
@@ -312,16 +370,58 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           introActive ? "opacity-100" : "opacity-0"
         )}
       >
-        <div className="throne-intro-panel absolute inset-x-4 top-4 rounded-[1.8rem] border border-primary/25 p-5 sm:inset-x-6 sm:top-6 sm:p-6">
-          <p className="text-[10px] tracking-[0.34em] text-primary/80">THRONE REGISTRY UNSEALED</p>
-          <div className="mt-4 flex items-end justify-between gap-4">
+        <div
+          className={cn(
+            "throne-intro-panel absolute inset-x-3 top-3 rounded-[1.55rem] border border-primary/25 p-4 sm:inset-x-6 sm:top-6 sm:rounded-[1.8rem] sm:p-6",
+            introStage === 1 && "throne-intro-panel-stage-one",
+            introStage === 2 && "throne-intro-panel-stage-two",
+            introStage >= 3 && "throne-intro-panel-stage-three"
+          )}
+        >
+          <div className="throne-intro-flash absolute inset-0" />
+          <div className="throne-seal-rings absolute inset-0" />
+          <div className="throne-intro-grid absolute inset-0" />
+          <div className="throne-intro-scan absolute inset-x-0 top-0 h-full" />
+          <div className="throne-intro-shards absolute inset-0">
+            <span className="throne-intro-shard throne-intro-shard-a" />
+            <span className="throne-intro-shard throne-intro-shard-b" />
+            <span className="throne-intro-shard throne-intro-shard-c" />
+          </div>
+          <p className="throne-intro-kicker text-[10px] tracking-[0.34em] text-primary/80">THRONE REGISTRY UNSEALED</p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div>
-              <p className="text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">권좌 봉인을 해제합니다.</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">상층 권좌, 찬탈 기록, 포식 승계 이력까지 의전 로그를 전개합니다.</p>
+              <p className="throne-intro-title text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">권좌 봉인을 해제합니다.</p>
+              <p className="throne-intro-summary mt-2 text-sm leading-6 text-muted-foreground">상층 권좌, 찬탈 기록, 포식 승계 이력까지 의전 로그를 전개합니다.</p>
             </div>
             <div className="hidden rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] tracking-[0.24em] text-primary sm:block">
               ACCESS ALPHA
             </div>
+          </div>
+          <div className="relative mt-5 space-y-3 sm:max-w-[25.5rem]">
+            {[
+              ["01", "SEAL ROUTE", "봉인 해제 절차 개시"],
+              ["02", "CHAIN BREAK", "구속 해제 절차 개시"],
+              ["03", "THRONE INDEX", "권좌 기록 절차 개시"],
+            ].map(([code, label, detail], index) => (
+              <div
+                key={code}
+                className={cn(
+                  "throne-intro-step flex min-h-[6.4rem] flex-col justify-between rounded-[1.05rem] border border-white/10 bg-black/15 px-4 py-4 sm:min-h-[6.9rem]",
+                  introStage === index + 1 && "is-active",
+                  introStage > index + 1 && "is-complete",
+                  introStage < index + 1 && "is-pending"
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[11px] tracking-[0.18em] text-primary/90">{code}</span>
+                  <span className="text-[10px] tracking-[0.16em] text-muted-foreground">{label}</span>
+                </div>
+                <div className="throne-intro-bar mt-4 h-2 overflow-hidden rounded-full bg-white/8">
+                  <span className="block h-full rounded-full bg-gradient-to-r from-primary via-sky-300 to-white" />
+                </div>
+                <p className="mt-3 text-[11px] leading-5 text-foreground/85 sm:text-[11.5px]">{detail}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -336,14 +436,16 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
         </p>
       </div>
 
-      <section className="throne-hero throne-glint relative overflow-hidden rounded-[1.6rem] border border-primary/20 px-4 py-5 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.75)] sm:px-5 sm:py-6">
+      <section className="throne-hero throne-glint throne-hero-scan throne-afterglow-target relative overflow-hidden rounded-[1.45rem] border border-primary/20 px-4 py-5 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.75)] sm:rounded-[1.6rem] sm:px-5 sm:py-6" style={waveStyle(0)}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(244,63,94,0.12),transparent_28%)]" />
-        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="throne-hero-orbit pointer-events-none absolute -right-10 top-1/2 hidden h-40 w-40 -translate-y-1/2 rounded-full border border-primary/15 sm:block" />
+        <div className="throne-hero-orbit pointer-events-none absolute -right-4 top-1/2 hidden h-24 w-24 -translate-y-1/2 rounded-full border border-white/10 sm:block" />
+        <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent sm:inset-x-6" />
         <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
             <p className="text-[10px] tracking-[0.28em] text-primary/80">EXECUTIVE SEAT ARCHIVE</p>
             <h3 className="mt-3 text-[1.7rem] font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-[2.15rem]">
-              엘모라와 녹타르의 정상부를 한 장의 명부로 전개합니다.
+               고위 권좌들을 하나의 명부로 전개합니다.
             </h3>
             <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
               협회의 찬탈자, 천칭과 천축, 녹타르 상층 혈통권, 그리고 포식으로 강탈된 권좌까지. 현좌와 승계 형식을 함께
@@ -351,7 +453,7 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[420px]">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:min-w-[420px]">
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 text-primary">
                 <Users className="h-4 w-4" />
@@ -366,7 +468,7 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
               </div>
               <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-foreground">{totalTitles}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+            <div className="col-span-2 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm sm:col-span-1">
               <div className="flex items-center gap-2 text-primary">
                 <Lock className="h-4 w-4" />
                 <span className="text-[11px] tracking-[0.18em] text-muted-foreground">지정 권좌</span>
@@ -376,22 +478,22 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           </div>
         </div>
 
-        <div className="relative mt-5 grid gap-3 border-t border-white/10 pt-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="relative mt-5 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 xl:grid-cols-4">
           <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
             <p className="text-[10px] tracking-[0.22em] text-primary/75">LUNAR CLAIMANTS</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">월식협회 및 해결사 계통 찬탈자 7석 보관</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">정점들을 포함한 찬탈자 7석</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
             <p className="text-[10px] tracking-[0.22em] text-primary/75">BALANCE / AXIS</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">황혼, 여명, 서광, 명멸의 천칭·천축 8석 보관</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">사대협회의 천칭 및 천축 8석</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
-            <p className="text-[10px] tracking-[0.22em] text-primary/75">NOCTAR BLOOD SEATS</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">네메시스와 뤼네의 상층 혈통권 9석 기록</p>
+            <p className="text-[10px] tracking-[0.22em] text-primary/75">NOCTAR OVERLORDS</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">네메시스와 뤼네의 권력자 9석</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
             <p className="text-[10px] tracking-[0.22em] text-primary/75">ACCESS GRADE</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">의전 등급 알파 이상만 승계 방식과 현좌 문구 편집 가능</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">의전 등급 알파 이상만 열람 가능</p>
           </div>
         </div>
       </section>
@@ -401,7 +503,10 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
           {throneArchives.map((realm) => (
             <section
               key={realm.realm}
-              className="throne-shell relative overflow-hidden rounded-[1.4rem] border border-border/70 p-4 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.65)] sm:p-5"
+              className="throne-shell throne-panel-enter throne-afterglow-target relative overflow-hidden rounded-[1.4rem] border border-border/70 p-4 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.65)] sm:p-5"
+              style={waveStyle(throneArchives.findIndex((item) => item.realm === realm.realm) + 1, {
+                animationDelay: `${throneArchives.findIndex((item) => item.realm === realm.realm) * 120}ms`,
+              })}
             >
               <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br opacity-100", realm.accent)} />
               <div className="relative">
@@ -411,7 +516,7 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
                     <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-foreground">{realm.realm}</h3>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{realm.summary}</p>
                   </div>
-                  <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] tracking-[0.2em] text-primary">
+                  <div className="self-start rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] tracking-[0.2em] text-primary sm:self-auto">
                     {realm.organizations.length} ORGANIZATIONS
                   </div>
                 </div>
@@ -419,57 +524,137 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
                 <div className="mt-4 grid gap-3 xl:grid-cols-2">
                   {realm.organizations.map((organization) => {
                     const organizationSeats = organization.positions.reduce((sum, position) => sum + position.holders.length, 0)
+                    const isFixerArc = organization.code === "FIXER ASCENDANCY"
+                    const isEclipseOrder = realm.realm === "엘모라" && organization.code === "ECLIPSE ORDER"
 
                     return (
                       <article
                         key={organization.name}
-                        className="group relative overflow-hidden rounded-2xl border border-border/70 bg-background/45 p-4 transition-transform duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background/55"
+                        className={cn(
+                          "throne-faction-card throne-panel-enter group relative overflow-hidden rounded-2xl border border-border/70 bg-background/45 p-4 transition-transform duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background/55",
+                          (isFixerArc || isEclipseOrder) && "xl:col-span-2"
+                        )}
+                        style={{ animationDelay: `${(throneArchives.findIndex((item) => item.realm === realm.realm) * 140) + (realm.organizations.findIndex((item) => item.name === organization.name) * 70)}ms` }}
                       >
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-70" />
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <p className="text-[10px] tracking-[0.22em] text-muted-foreground">{organization.code}</p>
                             <h4 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-foreground">{organization.name}</h4>
                           </div>
-                          <span className={cn("rounded-full border px-2.5 py-1 text-[11px] tracking-[0.16em]", organization.theme)}>
+                          <span className={cn("self-start rounded-full border px-2.5 py-1 text-[11px] tracking-[0.16em]", organization.theme)}>
                             {organizationSeats} SEATS
                           </span>
                         </div>
 
-                        <div className="mt-4 space-y-2.5">
-                          {organization.positions.map((position) => (
-                            <div
-                              key={`${organization.name}-${position.title}`}
-                              className="rounded-[1.15rem] border border-white/6 bg-black/12 p-3"
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-medium leading-6 text-foreground">{position.title}</p>
-                                  <p className="text-[11px] tracking-[0.14em] text-muted-foreground">{position.domain}</p>
-                                </div>
-                                <span className="rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 font-mono text-[11px] text-primary">
-                                  {position.holders.length.toString().padStart(2, "0")}
-                                </span>
-                              </div>
+                        {isFixerArc ? (
+                          <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                            {organization.positions.map((position, positionIndex) => {
+                              const holder = position.holders[0]
 
-                              <div className="mt-3 space-y-2.5">
-                                {position.holders.map((holder) => (
-                                  <div key={holder.seal} className="throne-seat-shell rounded-xl border px-3 py-3">
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                      <span className="font-mono text-[11px] tracking-[0.16em] text-primary/90">{holder.seal}</span>
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        <span className={cn("rounded-full border px-2 py-0.5 text-[11px]", statusTone(holder.state))}>{holder.state}</span>
-                                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] text-muted-foreground">{holder.succession}</span>
-                                      </div>
+                              return (
+                                <div
+                                  key={`${organization.name}-${position.title}`}
+                                  className="throne-position-card throne-panel-enter rounded-[1.05rem] border border-white/8 bg-black/14 p-3"
+                                  style={{ animationDelay: `${220 + positionIndex * 55}ms` }}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <p className="text-[13px] font-medium leading-5 text-foreground">{position.title}</p>
+                                      <p className="mt-1 text-[10px] tracking-[0.14em] text-muted-foreground">{position.domain}</p>
                                     </div>
-                                    <p className="mt-2 text-sm font-medium text-foreground">현좌: {holder.holder}</p>
-                                    <p className="mt-2 text-[12px] leading-6 text-muted-foreground">{holder.chronicle}</p>
+                                    <span className="rounded-full border border-primary/15 bg-primary/8 px-2 py-0.5 font-mono text-[10px] text-primary">
+                                      {holder?.seal ?? "--"}
+                                    </span>
                                   </div>
+
+                                  {holder ? (
+                                    <div className="mt-3 space-y-2">
+                                      <p className="text-[11px] text-muted-foreground">{holder.chronicle}</p>
+                                    </div>
+                                  ) : null}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ) : isEclipseOrder ? (
+                          <div className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
+                            <div className="rounded-[1.15rem] border border-sky-400/15 bg-sky-500/8 p-3">
+                              <p className="text-[10px] tracking-[0.18em] text-sky-100/80">LUNAR SUMMIT</p>
+                              <p className="mt-2 text-sm leading-6 text-foreground/90">
+                                엘모라 정상부의 시작점. 일요와 월요 찬탈자는 다른 협회 축보다 상위에 놓이는 월식령 직결 권좌다.
+                              </p>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {Array.from(new Set(organization.positions.map((position) => position.domain))).map((domain) => (
+                                  <span key={domain} className="rounded-full border border-sky-300/15 bg-white/[0.04] px-2.5 py-1 text-[11px] text-sky-100/90">
+                                    {domain}
+                                  </span>
                                 ))}
                               </div>
                             </div>
-                          ))}
-                        </div>
+
+                            <div className="grid gap-2 md:grid-cols-2">
+                              {organization.positions.map((position, positionIndex) => (
+                                <div
+                                  key={`${organization.name}-${position.title}`}
+                                  className="throne-position-card throne-panel-enter rounded-[1.1rem] border border-white/8 bg-black/14 p-3"
+                                  style={{ animationDelay: `${210 + positionIndex * 60}ms` }}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                      <p className="text-sm font-medium leading-6 text-foreground">{position.title}</p>
+                                      <p className="text-[11px] tracking-[0.14em] text-muted-foreground">{position.domain}</p>
+                                    </div>
+                                    <span className="rounded-full border border-sky-300/15 bg-sky-500/10 px-2.5 py-1 font-mono text-[11px] text-sky-100">
+                                      {position.holders.length.toString().padStart(2, "0")}
+                                    </span>
+                                  </div>
+
+                                  <div className="mt-3 space-y-2">
+                                    {position.holders.map((holder) => (
+                                      <div key={holder.seal} className="throne-seat-shell rounded-xl border px-3 py-3">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                          <span className="font-mono text-[11px] tracking-[0.16em] text-sky-100/90">{holder.seal}</span>
+                                        </div>
+                                        <p className="mt-2 text-[12px] leading-6 text-muted-foreground">{holder.chronicle}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-4 space-y-2.5">
+                            {organization.positions.map((position) => (
+                              <div
+                                key={`${organization.name}-${position.title}`}
+                                className="throne-position-card rounded-[1.15rem] border border-white/6 bg-black/12 p-3"
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="text-sm font-medium leading-6 text-foreground">{position.title}</p>
+                                    <p className="text-[11px] tracking-[0.14em] text-muted-foreground">{position.domain}</p>
+                                  </div>
+                                  <span className="rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 font-mono text-[11px] text-primary">
+                                    {position.holders.length.toString().padStart(2, "0")}
+                                  </span>
+                                </div>
+
+                                <div className="mt-3 space-y-2.5">
+                                  {position.holders.map((holder) => (
+                                    <div key={holder.seal} className="throne-seat-shell throne-panel-enter rounded-xl border px-3 py-3" style={{ animationDelay: `${(realm.organizations.findIndex((item) => item.name === organization.name) * 80) + (position.holders.findIndex((item) => item.seal === holder.seal) * 55)}ms` }}>
+                                      <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <span className="font-mono text-[11px] tracking-[0.16em] text-primary/90">{holder.seal}</span>
+                                      </div>
+                                      <p className="mt-2 text-[12px] leading-6 text-muted-foreground">{holder.chronicle}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </article>
                     )
                   })}
@@ -480,65 +665,104 @@ function AuditPanel({ introActive = false }: { introActive?: boolean }) {
         </div>
 
         <aside className="space-y-4 lg:min-h-0 lg:overflow-y-auto lg:pl-1">
-          <section className="rounded-[1.4rem] border border-border/70 bg-card/75 p-4 sm:p-5">
-            <div className="flex items-center gap-2 text-primary">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-[11px] tracking-[0.18em] text-muted-foreground">권역 점유율</span>
-            </div>
-            <div className="mt-4 space-y-4">
-              {seatDistribution.map((item) => (
-                <div key={item.realm}>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="text-foreground">{item.realm}</span>
-                    <span className="font-mono text-primary">{item.seats} / {totalSeats}</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-secondary/80">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary via-sky-400 to-cyan-300"
-                      style={{ width: `${item.ratio}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-[11px] tracking-[0.14em] text-muted-foreground">{item.ratio}% OF REGISTERED SEATS</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="throne-hero overflow-hidden rounded-[1.4rem] border border-primary/20 p-4 shadow-[0_18px_48px_-28px_rgba(0,0,0,0.72)] sm:p-5">
-            <p className="text-[10px] tracking-[0.24em] text-primary/80">ASCENSION FORMAT</p>
-            <div className="mt-4 rounded-[1.25rem] border border-white/10 bg-black/15 p-4">
-              <p className="text-[11px] tracking-[0.18em] text-muted-foreground">포식 승계 예시</p>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-foreground">
-                <p>권좌: 일요의 찬탈자</p>
-                <p>현좌: 신규 현좌명</p>
-                <p>승계 형식: 포식 승계</p>
-                <p>기록문: 전대 일요의 찬탈자를 포식한 뒤 권좌에 정착. 월식협회가 제3야간에 현좌를 재봉인.</p>
+          <section className="throne-hero throne-glint throne-panel-enter throne-afterglow-target overflow-hidden rounded-[1.3rem] border border-sky-400/20 p-4 shadow-[0_18px_48px_-28px_rgba(0,0,0,0.72)] sm:rounded-[1.4rem] sm:p-5" style={waveStyle(3, { animationDelay: "90ms" })}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] tracking-[0.24em] text-sky-200/80">ELMORA CONSTELLATION</p>
+                <p className="mt-2 text-base font-semibold tracking-[-0.03em] text-foreground">천칭은 기울지 않고, 천축은 흔들리지 않으니.</p>
+                <p className="mt-2 text-[12px] leading-6 text-muted-foreground">
+                  엘모라의 평형은 영원하리라.
+                </p>
+              </div>
+              <div className="rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-[10px] tracking-[0.22em] text-sky-100">
+                ELMORA
               </div>
             </div>
-            <div className="mt-4 space-y-2.5">
-              {successionFormats.map((item) => (
-                <div key={item.label} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                  <p className="text-sm font-medium text-foreground">{item.label}</p>
-                  <p className="mt-1 text-[12px] leading-6 text-muted-foreground">{item.detail}</p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "협회", value: elmoraOrganizations.length, tone: "text-sky-100" },
+                { label: "천칭·천축", value: elmoraAxisCount, tone: "text-violet-100" },
+                { label: "봉인 상태", value: elmoraSealedCount, tone: "text-amber-100" },
+              ].map((item, index) => (
+                <div key={item.label} className="throne-faction-card throne-panel-enter rounded-[1.15rem] border border-white/10 bg-black/15 px-3 py-3.5" style={{ animationDelay: `${140 + index * 70}ms` }}>
+                  <p className="text-[11px] tracking-[0.16em] text-muted-foreground">{item.label}</p>
+                  <p className={cn("mt-2 text-2xl font-semibold tracking-[-0.04em]", item.tone)}>{item.value}</p>
                 </div>
               ))}
             </div>
+            <div className="mt-3 rounded-[1.1rem] border border-white/10 bg-black/12 px-3 py-3">
+              <p className="font-mono text-[11px] tracking-[0.16em] text-sky-100/85">EXECUTIVE MASS</p>
+              <p className="mt-2 text-[12px] leading-6 text-muted-foreground">
+                엘모라 측 고위 좌석은 총 {elmoraSeatCount}석. 월식의 정점과 사대협회의 천칭 및 천축으로 이루어져있다.
+              </p>
+            </div>
           </section>
 
-          <section className="rounded-[1.4rem] border border-border/70 bg-card/75 p-4 sm:p-5">
-            <p className="text-[10px] tracking-[0.24em] text-primary/80">RECORDING DIRECTIVES</p>
-            <div className="mt-4 space-y-3">
+          <section className="throne-hero throne-glint throne-panel-enter throne-afterglow-target overflow-hidden rounded-[1.3rem] border border-primary/20 p-4 shadow-[0_18px_48px_-28px_rgba(0,0,0,0.72)] sm:rounded-[1.4rem] sm:p-5" style={waveStyle(4, { animationDelay: "180ms" })}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] tracking-[0.24em] text-primary/80">FIVE USURPERS</p>
+                <p className="mt-2 text-base font-semibold tracking-[-0.03em] text-foreground">월식의 가호 아래 명멸의 검을 휘두르고.</p>
+                <p className="mt-2 text-[12px] leading-6 text-muted-foreground">
+                  서광의 인도에 따라 여명과 황혼의 경계를 걸으리.
+                </p>
+              </div>
+              <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] tracking-[0.22em] text-primary">
+                FIXER ARC
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="throne-faction-card throne-panel-enter rounded-[1.15rem] border border-white/10 bg-black/15 px-3 py-3.5" style={{ animationDelay: "240ms" }}>
+                <p className="text-[11px] tracking-[0.16em] text-muted-foreground">찬탈자</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {fixerSignalDomains.map((domain) => (
+                    <span key={domain} className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-foreground/90">
+                      {domain}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="throne-faction-card throne-panel-enter rounded-[1.15rem] border border-white/10 bg-black/15 px-3 py-3.5" style={{ animationDelay: "300ms" }}>
+                <p className="text-[11px] tracking-[0.16em] text-muted-foreground">공석</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-primary">{fixerClaimants.length}</p>
+                <p className="mt-2 text-[12px] leading-6 text-muted-foreground">실전형 권좌 {fixerClaimants.length}석 중 공석 감시는 {fixerVacantCount}석.</p>
+              </div>
+            </div>
+            <div className="mt-3 rounded-[1.1rem] border border-white/10 bg-black/12 px-3 py-3">
+              <p className="font-mono text-[11px] tracking-[0.16em] text-primary/85">FIELD MOTION</p>
+              <p className="mt-2 text-[12px] leading-6 text-muted-foreground">
+                해결사 권좌는 타격, 추적, 관문, 계약, 종결의 다섯 기능축으로 퍼져 움직인다. 명부보다 현장 흔적이 먼저 남는 계열이다.
+              </p>
+            </div>
+          </section>
+
+          <section className="throne-shell throne-glint throne-panel-enter throne-afterglow-target overflow-hidden rounded-[1.3rem] border border-fuchsia-400/20 p-4 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.65)] sm:rounded-[1.4rem] sm:p-5" style={waveStyle(5, { animationDelay: "260ms" })}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] tracking-[0.24em] text-fuchsia-100/80">NOCTAR BLOODLINE</p>
+                <p className="mt-2 text-base font-semibold tracking-[-0.03em] text-foreground">그곳에서 첫 복수가 터져나왔다.</p>
+              </div>
+              <Fingerprint className="h-4 w-4 text-fuchsia-200" />
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {[
-                "권좌가 바뀌면 현좌와 승계 형식을 동시에 수정합니다.",
-                "먹어서 빼앗은 경우 승계 형식을 반드시 '포식 승계'로 기록합니다.",
-                "복수 권좌는 좌석별 seal과 기록문을 따로 유지합니다.",
-                "비공개 권좌도 공석 여부와 계승 상태는 남겨 둡니다.",
+                { label: "혈통 유지", value: noctarBloodCount, tone: "text-fuchsia-100" },
+                { label: "총 좌석", value: noctarSeatCount, tone: "text-rose-100" },
+                { label: "변이 흔적", value: noctarMutationCount, tone: "text-red-100" },
               ].map((item, index) => (
-                <div key={item} className="flex items-start gap-3 rounded-xl bg-secondary/30 px-3 py-3">
-                  <span className="mt-0.5 font-mono text-xs text-primary">{String(index + 1).padStart(2, "0")}</span>
-                  <p className="text-sm leading-6 text-foreground">{item}</p>
+                <div key={item.label} className="throne-faction-card throne-panel-enter rounded-[1.1rem] border border-white/8 bg-secondary/25 px-3 py-3.5" style={{ animationDelay: `${320 + index * 80}ms` }}>
+                  <p className="text-[11px] tracking-[0.16em] text-muted-foreground">{item.label}</p>
+                  <p className={cn("mt-2 text-2xl font-semibold tracking-[-0.04em]", item.tone)}>{item.value}</p>
                 </div>
               ))}
+            </div>
+            <div className="mt-3 rounded-[1.1rem] border border-white/8 bg-black/12 px-3 py-3">
+              <p className="font-mono text-[11px] tracking-[0.16em] text-fuchsia-100/80">BLOOD TIDE</p>
+              <p className="mt-2 text-[12px] leading-6 text-muted-foreground">
+                녹타르는 {noctarOrganizations.length}개 혈계 조직, {noctarSeatCount}석의 상층 좌석으로 유지된다. 기본 결은 혈통이지만, 일부는 포식 흔적을 남긴다.
+              </p>
             </div>
           </section>
         </aside>
@@ -955,6 +1179,8 @@ export default function Dashboard() {
   const [booting, setBooting] = useState(true)
   const [scanProgress, setScanProgress] = useState(0)
   const [auditIntroActive, setAuditIntroActive] = useState(false)
+  const [auditIntroStage, setAuditIntroStage] = useState(0)
+  const [auditAfterglowActive, setAuditAfterglowActive] = useState(false)
   const previousMenuRef = useRef(activeMenu)
 
   useEffect(() => {
@@ -963,6 +1189,8 @@ export default function Dashboard() {
 
     if (activeMenu !== "audit") {
       setAuditIntroActive(false)
+      setAuditIntroStage(0)
+      setAuditAfterglowActive(false)
       return
     }
 
@@ -971,11 +1199,33 @@ export default function Dashboard() {
     }
 
     setAuditIntroActive(true)
-    const timer = setTimeout(() => {
-      setAuditIntroActive(false)
-    }, 1550)
+    setAuditIntroStage(1)
+    setAuditAfterglowActive(false)
 
-    return () => clearTimeout(timer)
+    const stageTwoTimer = setTimeout(() => {
+      setAuditIntroStage(2)
+    }, 950)
+
+    const stageThreeTimer = setTimeout(() => {
+      setAuditIntroStage(3)
+    }, 1900)
+
+    const aftermathTimer = setTimeout(() => {
+      setAuditAfterglowActive(true)
+    }, 2880)
+
+    const closeTimer = setTimeout(() => {
+      setAuditIntroActive(false)
+      setAuditIntroStage(0)
+      setAuditAfterglowActive(false)
+    }, 4480)
+
+    return () => {
+      clearTimeout(stageTwoTimer)
+      clearTimeout(stageThreeTimer)
+      clearTimeout(aftermathTimer)
+      clearTimeout(closeTimer)
+    }
   }, [activeMenu])
 
   useEffect(() => {
@@ -1065,7 +1315,7 @@ export default function Dashboard() {
       case "worldview":
         return <WorldviewPanel />
       case "audit":
-        return <AuditPanel introActive={auditIntroActive} />
+        return <AuditPanel introActive={auditIntroActive} introStage={auditIntroStage} aftermathActive={auditAfterglowActive} />
       case "archive":
         return <ArchivePanel />
       default:

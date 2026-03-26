@@ -174,6 +174,65 @@
     isolation: isolate;
   }
 
+  .throne-vault::after {
+    content: '';
+    position: absolute;
+    inset: -14% -8% auto;
+    height: 72%;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(56, 189, 248, 0.08) 0%, rgba(56, 189, 248, 0.03) 34%, transparent 72%),
+      radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.06) 0%, transparent 48%);
+    opacity: 0;
+    transform: scale(0.92);
+    transition:
+      opacity 420ms ease,
+      transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 420ms ease;
+    filter: saturate(1) blur(0px);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .throne-stage-one::after {
+    opacity: 0.42;
+    transform: scale(1);
+    filter: saturate(1.05) blur(0px);
+  }
+
+  .throne-stage-two::after {
+    opacity: 0.7;
+    transform: scale(1.04);
+    filter: saturate(1.16) blur(2px);
+  }
+
+  .throne-stage-three::after {
+    opacity: 1;
+    transform: scale(1.08);
+    filter: saturate(1.3) blur(4px);
+  }
+
+  .throne-activation-live::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(56, 189, 248, 0.16) 0%, rgba(56, 189, 248, 0.04) 32%, transparent 70%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: throne-activation-wave 1.15s ease-out both;
+    z-index: 12;
+  }
+
+  .throne-activation-live .throne-shell,
+  .throne-activation-live .throne-hero,
+  .throne-activation-live .throne-faction-card,
+  .throne-activation-live .throne-seat-shell,
+  .throne-activation-live .throne-position-card {
+    animation-duration: 0.9s;
+    animation-name: throne-panel-enter, throne-activation-surge;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1), ease-out;
+    animation-fill-mode: both;
+  }
+
   .throne-hero {
     background:
       linear-gradient(135deg, rgba(7, 14, 27, 0.96) 0%, rgba(12, 26, 44, 0.88) 52%, rgba(18, 12, 34, 0.8) 100%),
@@ -181,6 +240,40 @@
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
       0 24px 50px rgba(2, 6, 23, 0.34);
+  }
+
+  .throne-hero-scan::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 11px,
+        rgba(255, 255, 255, 0.018) 12px,
+        transparent 13px
+      );
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .throne-hero-orbit {
+    box-shadow: 0 0 28px rgba(56, 189, 248, 0.12);
+    animation: throne-orbit-pulse 3.8s ease-in-out infinite;
+  }
+
+  .throne-stage-two .throne-hero-orbit,
+  .throne-stage-three .throne-hero-orbit {
+    box-shadow: 0 0 34px rgba(56, 189, 248, 0.2);
+  }
+
+  .throne-stage-three .throne-hero,
+  .throne-stage-three .throne-shell {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 22px 48px rgba(2, 6, 23, 0.34),
+      0 0 0 1px rgba(56, 189, 248, 0.08);
   }
 
   .throne-shell {
@@ -192,13 +285,92 @@
       0 18px 42px rgba(2, 6, 23, 0.26);
   }
 
-  .throne-seat-shell {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.015) 100%),
-      linear-gradient(135deg, rgba(56, 189, 248, 0.035) 0%, transparent 52%);
+  .throne-panel-enter {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+    animation: throne-panel-enter 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .throne-afterglow-target {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .throne-afterglow-target::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(110deg, transparent 10%, rgba(255, 255, 255, 0.12) 30%, rgba(125, 211, 252, 0.2) 48%, rgba(250, 204, 21, 0.1) 58%, transparent 78%);
+    opacity: 0;
+    transform: translateX(-135%);
+    pointer-events: none;
+    mix-blend-mode: screen;
+    z-index: 2;
+  }
+
+  .throne-afterglow-live .throne-afterglow-target {
+    animation: throne-afterglow-wave 0.88s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--wave-order, 0) * 120ms);
+  }
+
+  .throne-afterglow-live .throne-afterglow-target::after {
+    animation: throne-afterglow-sheen 0.92s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--wave-order, 0) * 120ms + 70ms);
+  }
+
+  .throne-faction-card {
+    position: relative;
+    isolation: isolate;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 10px 24px rgba(2, 6, 23, 0.18);
+      0 16px 32px rgba(2, 6, 23, 0.2);
+  }
+
+  .throne-faction-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, transparent 42%, rgba(244, 63, 94, 0.06) 100%);
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .throne-position-card {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.065) 0%, rgba(255, 255, 255, 0.03) 100%),
+      linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(255, 255, 255, 0.015) 52%, rgba(244, 63, 94, 0.03) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 12px 26px rgba(2, 6, 23, 0.16);
+  }
+
+  .throne-position-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.055) 50%, transparent 100%);
+    opacity: 0.92;
+    pointer-events: none;
+  }
+
+  .throne-position-card .text-muted-foreground,
+  .throne-seat-shell .text-muted-foreground {
+    color: color-mix(in oklch, var(--foreground) 66%, var(--muted-foreground));
+  }
+
+  .throne-seat-shell {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.024) 100%),
+      linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, rgba(255, 255, 255, 0.02) 56%, rgba(244, 63, 94, 0.025) 100%);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 10px 24px rgba(2, 6, 23, 0.14);
   }
 
   .throne-glint {
@@ -220,9 +392,34 @@
     background:
       radial-gradient(circle at center, rgba(8, 16, 30, 0.1) 0%, rgba(4, 8, 17, 0.78) 58%, rgba(2, 6, 12, 0.92) 100%);
     backdrop-filter: blur(8px);
+    transition:
+      background 340ms ease,
+      backdrop-filter 340ms ease;
+  }
+
+  .throne-stage-one .throne-intro-overlay {
+    background:
+      radial-gradient(circle at center, rgba(18, 38, 68, 0.16) 0%, rgba(4, 8, 17, 0.8) 56%, rgba(2, 6, 12, 0.93) 100%);
+  }
+
+  .throne-stage-two .throne-intro-overlay {
+    background:
+      radial-gradient(circle at center, rgba(37, 99, 235, 0.18) 0%, rgba(8, 18, 34, 0.84) 44%, rgba(3, 7, 14, 0.95) 100%),
+      radial-gradient(circle at top, rgba(250, 204, 21, 0.08) 0%, transparent 42%);
+    backdrop-filter: blur(10px);
+  }
+
+  .throne-stage-three .throne-intro-overlay {
+    background:
+      radial-gradient(circle at center, rgba(56, 189, 248, 0.24) 0%, rgba(14, 36, 68, 0.88) 36%, rgba(3, 7, 14, 0.97) 100%),
+      radial-gradient(circle at top, rgba(250, 204, 21, 0.14) 0%, transparent 46%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 22%);
+    backdrop-filter: blur(12px);
   }
 
   .throne-intro-panel {
+    position: relative;
+    overflow: hidden;
     background:
       linear-gradient(135deg, rgba(8, 17, 32, 0.94) 0%, rgba(14, 29, 49, 0.82) 58%, rgba(22, 14, 36, 0.74) 100%),
       radial-gradient(circle at top left, rgba(56, 189, 248, 0.16) 0%, transparent 40%);
@@ -230,6 +427,303 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
       0 26px 55px rgba(2, 6, 23, 0.34);
     animation: throne-intro-rise 1.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition:
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 320ms ease,
+      background 320ms ease,
+      border-color 320ms ease;
+  }
+
+  .throne-intro-panel-stage-one {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 26px 55px rgba(2, 6, 23, 0.34),
+      0 0 0 1px rgba(56, 189, 248, 0.08);
+  }
+
+  .throne-intro-panel-stage-two {
+    background:
+      linear-gradient(135deg, rgba(7, 18, 38, 0.96) 0%, rgba(13, 33, 64, 0.88) 56%, rgba(28, 18, 46, 0.8) 100%),
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.22) 0%, transparent 42%),
+      radial-gradient(circle at top right, rgba(250, 204, 21, 0.08) 0%, transparent 36%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 30px 62px rgba(2, 6, 23, 0.42),
+      0 0 0 1px rgba(56, 189, 248, 0.12),
+      0 0 42px rgba(56, 189, 248, 0.14);
+    transform: translateY(-2px) scale(1.01);
+  }
+
+  .throne-intro-panel-stage-three {
+    background:
+      linear-gradient(135deg, rgba(8, 20, 42, 0.98) 0%, rgba(15, 40, 76, 0.92) 52%, rgba(34, 20, 56, 0.86) 100%),
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.28) 0%, transparent 44%),
+      radial-gradient(circle at top right, rgba(250, 204, 21, 0.12) 0%, transparent 40%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 36px 78px rgba(2, 6, 23, 0.5),
+      0 0 0 1px rgba(125, 211, 252, 0.16),
+      0 0 56px rgba(56, 189, 248, 0.2),
+      0 0 120px rgba(250, 204, 21, 0.08);
+    transform: translateY(-4px) scale(1.018);
+  }
+
+  .throne-intro-kicker,
+  .throne-intro-title,
+  .throne-intro-summary {
+    position: relative;
+    z-index: 1;
+    transform-origin: left center;
+    will-change: transform, text-shadow, opacity, letter-spacing;
+  }
+
+  .throne-intro-title {
+    text-shadow: 0 0 18px rgba(56, 189, 248, 0.08);
+  }
+
+  .throne-stage-one .throne-intro-title {
+    animation: throne-title-resonance 520ms ease-out 1;
+  }
+
+  .throne-stage-two .throne-intro-title {
+    text-shadow: 0 0 24px rgba(56, 189, 248, 0.14), 0 0 48px rgba(56, 189, 248, 0.08);
+    animation: throne-title-resonance 620ms ease-out 1;
+  }
+
+  .throne-stage-three .throne-intro-title {
+    text-shadow: 0 0 28px rgba(125, 211, 252, 0.2), 0 0 60px rgba(250, 204, 21, 0.08);
+    animation: throne-title-resonance-strong 760ms cubic-bezier(0.22, 1, 0.36, 1) 1;
+  }
+
+  .throne-stage-two .throne-intro-kicker,
+  .throne-stage-three .throne-intro-kicker {
+    animation: throne-kicker-flicker 480ms ease-out 1;
+  }
+
+  .throne-stage-three .throne-intro-summary {
+    animation: throne-summary-rise 620ms cubic-bezier(0.22, 1, 0.36, 1) 1;
+  }
+
+  .throne-intro-flash {
+    background:
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.22) 0%, rgba(56, 189, 248, 0.14) 22%, transparent 58%),
+      linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 48%, transparent 100%);
+    opacity: 0;
+    pointer-events: none;
+    animation: throne-intro-flash 1.1s ease-out both;
+  }
+
+  .throne-stage-two .throne-intro-flash {
+    background:
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.28) 0%, rgba(56, 189, 248, 0.18) 22%, transparent 58%),
+      linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 48%, transparent 100%);
+  }
+
+  .throne-stage-three .throne-intro-flash {
+    background:
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.34) 0%, rgba(125, 211, 252, 0.22) 20%, rgba(250, 204, 21, 0.12) 38%, transparent 62%),
+      linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 48%, transparent 100%);
+  }
+
+  .throne-intro-grid {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 20px 20px;
+    mask-image: radial-gradient(circle at center, black, transparent 80%);
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .throne-seal-rings::before,
+  .throne-seal-rings::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    box-shadow: 0 0 24px rgba(56, 189, 248, 0.12);
+  }
+
+  .throne-seal-rings::before {
+    width: 180px;
+    height: 180px;
+    right: -40px;
+    top: -48px;
+    animation: throne-ring-break 1.5s ease-out both;
+  }
+
+  .throne-seal-rings::after {
+    width: 110px;
+    height: 110px;
+    right: 8px;
+    top: 8px;
+    animation: throne-ring-break 1.5s ease-out both 120ms;
+  }
+
+  .throne-stage-one .throne-seal-rings::before {
+    animation: throne-ring-break 1.5s ease-out both, throne-stage-resonance 1.1s ease-out both 220ms;
+  }
+
+  .throne-stage-two .throne-seal-rings::before {
+    border-color: rgba(96, 165, 250, 0.28);
+    box-shadow: 0 0 34px rgba(56, 189, 248, 0.18);
+    animation: throne-ring-break 1.7s ease-out both, throne-stage-resonance 1.25s ease-out both 140ms;
+  }
+
+  .throne-stage-two .throne-seal-rings::after {
+    border-color: rgba(96, 165, 250, 0.24);
+    box-shadow: 0 0 28px rgba(56, 189, 248, 0.14);
+    animation: throne-ring-break 1.5s ease-out both 80ms, throne-stage-resonance 1.1s ease-out both 260ms;
+  }
+
+  .throne-stage-three .throne-seal-rings::before {
+    border-color: rgba(125, 211, 252, 0.34);
+    box-shadow: 0 0 44px rgba(56, 189, 248, 0.22), 0 0 88px rgba(250, 204, 21, 0.08);
+    animation: throne-ring-break 1.85s ease-out both, throne-stage-resonance-strong 1.5s cubic-bezier(0.22, 1, 0.36, 1) both 90ms;
+  }
+
+  .throne-stage-three .throne-seal-rings::after {
+    border-color: rgba(250, 204, 21, 0.24);
+    box-shadow: 0 0 34px rgba(250, 204, 21, 0.14);
+    animation: throne-ring-break 1.55s ease-out both 40ms, throne-stage-resonance 1.2s ease-out both 220ms;
+  }
+
+  .throne-intro-scan::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.12) 48%, transparent 100%);
+    transform: translateY(-110%);
+    animation: throne-intro-scan 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .throne-intro-step {
+    opacity: 0.28;
+    transform: translateY(0) scale(0.985);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.02) 100%),
+      linear-gradient(135deg, rgba(8, 17, 32, 0.92) 0%, rgba(11, 23, 40, 0.82) 100%);
+    transition:
+      opacity 220ms ease,
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms ease,
+      box-shadow 220ms ease,
+      background-color 220ms ease;
+  }
+
+  .throne-intro-step.is-pending {
+    opacity: 0.22;
+  }
+
+  .throne-intro-step.is-active {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+    border-color: rgba(56, 189, 248, 0.26);
+    background: linear-gradient(135deg, rgba(8, 17, 32, 0.92) 0%, rgba(17, 34, 57, 0.82) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 1px rgba(56, 189, 248, 0.12),
+      0 18px 34px rgba(2, 6, 23, 0.26);
+    animation: throne-step-lock 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .throne-intro-step.is-complete {
+    opacity: 0.72;
+    transform: translateY(-1px) scale(1);
+    border-color: rgba(56, 189, 248, 0.18);
+  }
+
+  .throne-intro-shards {
+    pointer-events: none;
+  }
+
+  .throne-intro-shard {
+    position: absolute;
+    display: block;
+    width: 1px;
+    height: 120%;
+    background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 18%, rgba(56, 189, 248, 0.65) 50%, transparent 100%);
+    opacity: 0;
+    transform-origin: center;
+    filter: blur(0.4px);
+  }
+
+  .throne-intro-shard-a {
+    left: 16%;
+    top: -10%;
+    transform: rotate(24deg) translateY(-20px);
+    animation: throne-shard-fall 1s ease-out both 120ms;
+  }
+
+  .throne-intro-shard-b {
+    left: 54%;
+    top: -18%;
+    transform: rotate(-12deg) translateY(-20px);
+    animation: throne-shard-fall 1s ease-out both 220ms;
+  }
+
+  .throne-intro-shard-c {
+    right: 14%;
+    top: -14%;
+    transform: rotate(18deg) translateY(-20px);
+    animation: throne-shard-fall 1s ease-out both 320ms;
+  }
+
+  .throne-intro-bar span {
+    width: 0;
+    transition: width 560ms linear, opacity 200ms ease;
+  }
+
+  .throne-intro-step.is-active .throne-intro-bar span,
+  .throne-intro-step.is-complete .throne-intro-bar span {
+    width: 100%;
+    opacity: 1;
+  }
+
+  @media (max-width: 640px) {
+    .throne-vault {
+      gap: 0;
+    }
+
+    .throne-intro-panel {
+      max-height: calc(100vh - 1.5rem);
+      overflow: hidden;
+    }
+
+    .throne-intro-grid {
+      opacity: 0.22;
+    }
+
+    .throne-intro-step {
+      min-height: 5.85rem;
+      border-radius: 0.95rem;
+    }
+
+    .throne-hero,
+    .throne-shell,
+    .throne-faction-card,
+    .throne-position-card,
+    .throne-seat-shell {
+      backdrop-filter: blur(10px);
+    }
+
+    .throne-glint::after {
+      background: linear-gradient(108deg, transparent 22%, rgba(255, 255, 255, 0.06) 48%, transparent 78%);
+      opacity: 0.85;
+    }
+
+    .throne-hero .text-3xl,
+    .throne-shell .text-3xl {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .throne-faction-card .text-2xl,
+    .throne-shell .text-2xl,
+    .throne-hero .text-2xl {
+      font-size: 1.45rem;
+      line-height: 1.05;
+    }
   }
 
   .archive-panel-shell {
@@ -373,7 +867,301 @@
   }
 
   100% {
-    transform: translateY(-8px) scale(1.01);
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes throne-panel-enter {
+  0% {
     opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes throne-afterglow-wave {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+    box-shadow: inherit;
+  }
+
+  36% {
+    transform: translateY(-4px) scale(1.012);
+    filter: brightness(1.08) saturate(1.08);
+    box-shadow:
+      0 0 0 1px rgba(125, 211, 252, 0.12),
+      0 18px 44px rgba(2, 6, 23, 0.28),
+      0 0 44px rgba(56, 189, 248, 0.12);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes throne-afterglow-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-135%);
+  }
+
+  24% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(138%);
+  }
+}
+
+@keyframes throne-intro-scan {
+  0% {
+    transform: translateY(-110%);
+    opacity: 0;
+  }
+
+  22% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes throne-ring-break {
+  0% {
+    transform: scale(0.72);
+    opacity: 0;
+  }
+
+  32% {
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+@keyframes throne-stage-resonance {
+  0% {
+    transform: scale(0.86);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.85;
+  }
+
+  100% {
+    transform: scale(1.42);
+    opacity: 0;
+  }
+}
+
+@keyframes throne-stage-resonance-strong {
+  0% {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes throne-title-resonance {
+  0% {
+    transform: translateX(0);
+    letter-spacing: -0.04em;
+  }
+
+  18% {
+    transform: translateX(-0.5px);
+  }
+
+  36% {
+    transform: translateX(0.8px);
+  }
+
+  58% {
+    transform: translateX(-0.35px);
+  }
+
+  100% {
+    transform: translateX(0);
+    letter-spacing: -0.04em;
+  }
+}
+
+@keyframes throne-title-resonance-strong {
+  0% {
+    transform: translateX(0) scale(1);
+    letter-spacing: -0.04em;
+  }
+
+  20% {
+    transform: translateX(-0.8px) scale(1.01);
+    letter-spacing: -0.038em;
+  }
+
+  42% {
+    transform: translateX(1px) scale(1.012);
+    letter-spacing: -0.034em;
+  }
+
+  64% {
+    transform: translateX(-0.4px) scale(1.006);
+    letter-spacing: -0.037em;
+  }
+
+  100% {
+    transform: translateX(0) scale(1);
+    letter-spacing: -0.04em;
+  }
+}
+
+@keyframes throne-kicker-flicker {
+  0% {
+    opacity: 0.78;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+
+  100% {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+}
+
+@keyframes throne-summary-rise {
+  0% {
+    opacity: 0.6;
+    transform: translateY(3px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes throne-step-lock {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes throne-bar-fill {
+  0% {
+    width: 0;
+    opacity: 0.4;
+  }
+
+  100% {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes throne-orbit-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translateY(-50%) scale(1.06);
+  }
+}
+
+@keyframes throne-activation-wave {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes throne-activation-surge {
+  0% {
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+    filter: brightness(1);
+  }
+
+  30% {
+    box-shadow: 0 0 28px rgba(56, 189, 248, 0.18);
+    filter: brightness(1.08);
+  }
+
+  100% {
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+    filter: brightness(1);
+  }
+}
+
+@keyframes throne-intro-flash {
+  0% {
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes throne-shard-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scaleY(0.8);
+  }
+
+  22% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(36px) scaleY(1.18);
   }
 }
