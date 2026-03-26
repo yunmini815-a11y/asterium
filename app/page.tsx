@@ -254,8 +254,10 @@ function ArchivePanel() {
   const [mobileHintVisible, setMobileHintVisible] = useState(true)
   const [mobileNudgeActive, setMobileNudgeActive] = useState(false)
   const [detailPulse, setDetailPulse] = useState(false)
+  const [isDraggingMobileList, setIsDraggingMobileList] = useState(false)
   const detailPanelRef = useRef<HTMLElement>(null)
   const mobileListRef = useRef<HTMLDivElement>(null)
+  const dragStartXRef = useRef<number | null>(null)
   const selectedDoc = documents.find((doc) => doc.id === selectedDocId) ?? documents[0]
   const selectedDocIndex = documents.findIndex((doc) => doc.id === selectedDocId)
 
@@ -375,9 +377,26 @@ function ArchivePanel() {
             <div
               ref={mobileListRef}
               className={cn(
-                "archive-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 scroll-smooth transition-transform duration-500",
+                "archive-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 scroll-smooth transition-transform duration-500 touch-pan-x",
                 mobileNudgeActive && "translate-x-1"
               )}
+              onTouchStart={(event) => {
+                dragStartXRef.current = event.touches[0]?.clientX ?? null
+                setIsDraggingMobileList(false)
+              }}
+              onTouchMove={(event) => {
+                if (dragStartXRef.current === null) return
+                const deltaX = Math.abs((event.touches[0]?.clientX ?? 0) - dragStartXRef.current)
+                if (deltaX > 8) {
+                  setIsDraggingMobileList(true)
+                }
+              }}
+              onTouchEnd={() => {
+                window.setTimeout(() => {
+                  setIsDraggingMobileList(false)
+                  dragStartXRef.current = null
+                }, 80)
+              }}
             >
               {documents.map((doc) => {
                 const isActive = selectedDocId === doc.id
@@ -387,6 +406,7 @@ function ArchivePanel() {
                     type="button"
                     key={doc.id}
                     onClick={() => {
+                      if (isDraggingMobileList) return
                       setSelectedDocId(doc.id)
                       if (window.innerWidth < 1024) {
                         detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -397,6 +417,7 @@ function ArchivePanel() {
                         ? "scale-[1.01] border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25),0_18px_40px_rgba(2,6,23,0.28)]"
                         : "scale-[0.985] border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
                     }`}
+                    style={{ touchAction: "pan-x" }}
                   >
                     <div
                       className={cn(

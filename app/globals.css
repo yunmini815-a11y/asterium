@@ -173,6 +173,8 @@
   .archive-scroll {
     scrollbar-width: none;
     -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   .archive-scroll::-webkit-scrollbar {
