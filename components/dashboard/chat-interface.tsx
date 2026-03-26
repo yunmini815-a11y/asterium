@@ -1383,7 +1383,7 @@ function generateContextualResponse(userInput: string): string {
   
   // 해결사 관련
   if (input.includes("해결사") || input.includes("등급") || input.includes("오닉스")) {
-    return `[아카식레코드 인사 데이터베이스: 해결사]\n\n해결사는 엘모라에서 공인된 전문가 집단입니다. 월식협회에서 이들을 관리하며, 이클립스 기어에 대한 전반적인 관리도 담당합니다.\n\n${WORLD_KNOWLEDGE.lunarEclipse.members}\n\n해결사들은 임무 수행 중 불가항력으로 법을 어겨야 하는 상황에 대비해 일정 수준의 면책권을 부여받습니다.\n\n요원님의 해결사 등급 조회가 필요하시면 '역량 감사' 메뉴를 이용해 주십시오.`
+    return `[아카식레코드 인사 데이터베이스: 해결사]\n\n해결사는 엘모라에서 공인된 전문가 집단입니다. 월식협회에서 이들을 관리하며, 이클립스 기어에 대한 전반적인 관리도 담당합니다.\n\n${WORLD_KNOWLEDGE.lunarEclipse.members}\n\n해결사들은 임무 수행 중 불가항력으로 법을 어겨야 하는 상황에 대비해 일정 수준의 면책권을 부여받습니다.\n\n해결사 상층 권좌 체계 열람이 필요하시면 '권좌 명부' 메뉴를 이용해 주십시오.`
   }
   
   // 역사 관련
@@ -1408,7 +1408,7 @@ function generateContextualResponse(userInput: string): string {
   
   // 이능력 관련
   if (input.includes("이능") || input.includes("능력") || input.includes("힘") || input.includes("초능력")) {
-    return `[아카식레코드 이능력 아카이브]\n\n${WORLD_KNOWLEDGE.concepts.abiliy}\n\n이능력은 인베스티아 시대부터 전해져 온 인간의 고유한 힘입니다. 각 개인마다 발현되는 형태가 다르며, 협회에서는 요원들의 이능력을 '역량'으로 분류하여 관리합니다.\n\n요원님의 역량 상세 정보가 필요하시면 '역량 감사' 메뉴를 이용해 주십시오.`
+    return `[아카식레코드 이능력 아카이브]\n\n${WORLD_KNOWLEDGE.concepts.abiliy}\n\n이능력은 인베스티아 시대부터 전해져 온 인간의 고유한 힘입니다. 각 개인마다 발현되는 형태가 다르며, 협회에서는 요원들의 이능력을 '역량'으로 분류하여 관리합니다.\n\n각 세력의 상층 권좌와 지휘 체계를 보시려면 '권좌 명부' 메뉴를 이용해 주십시오.`
   }
   
   // 현재 상황

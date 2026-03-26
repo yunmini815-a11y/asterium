@@ -83,92 +83,327 @@ function WorldviewPanel() {
 }
 
 function AuditPanel() {
-  const agents = [
-    { id: "A-001", name: "김서진", rank: "상급 요원", capability: 94, status: "현장 배치" },
-    { id: "A-007", name: "이도현", rank: "특수 요원", capability: 89, status: "대기" },
-    { id: "A-023", name: "박지우", rank: "신입 요원", capability: 72, status: "훈련 중" },
-    { id: "A-012", name: "최민서", rank: "상급 요원", capability: 91, status: "임무 수행" },
+  const throneArchives = [
+    {
+      realm: "엘모라",
+      code: "ELMORA EXECUTIVE CONSTELLATION",
+      summary: "협회 체계를 지배하는 찬탈자와 각 협회의 천칭, 천축 계열을 봉인 기록한 고위직 명부.",
+      accent: "from-sky-400/18 via-cyan-400/8 to-transparent",
+      organizations: [
+        {
+          name: "월식협회",
+          code: "LUNAR ECLIPSE",
+          theme: "border-sky-400/20 bg-sky-500/10 text-sky-100",
+          positions: [
+            { title: "일요의 찬탈자", seats: 1 },
+            { title: "월요의 찬탈자", seats: 1 },
+          ],
+        },
+        {
+          name: "황혼협회",
+          code: "DUSK ORDER",
+          theme: "border-violet-400/20 bg-violet-500/10 text-violet-100",
+          positions: [
+            { title: "황혼의 천칭", seats: 1 },
+            { title: "황혼의 천축", seats: 1 },
+          ],
+        },
+        {
+          name: "여명협회",
+          code: "DAYBREAK ORDER",
+          theme: "border-amber-400/20 bg-amber-500/10 text-amber-100",
+          positions: [
+            { title: "여명의 천칭", seats: 1 },
+            { title: "여명의 천축", seats: 1 },
+          ],
+        },
+        {
+          name: "서광협회",
+          code: "AURORA ORDER",
+          theme: "border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
+          positions: [
+            { title: "서광의 천칭", seats: 1 },
+            { title: "서광의 천축", seats: 1 },
+          ],
+        },
+        {
+          name: "명멸협회",
+          code: "GLIMMER ORDER",
+          theme: "border-rose-400/20 bg-rose-500/10 text-rose-100",
+          positions: [
+            { title: "명멸의 천칭", seats: 1 },
+            { title: "명멸의 천축", seats: 1 },
+          ],
+        },
+        {
+          name: "해결사",
+          code: "FIXER ASCENDANCY",
+          theme: "border-primary/25 bg-primary/10 text-primary",
+          positions: [
+            { title: "화요의 찬탈자", seats: 1 },
+            { title: "수요의 찬탈자", seats: 1 },
+            { title: "목요의 찬탈자", seats: 1 },
+            { title: "금요의 찬탈자", seats: 1 },
+            { title: "토요의 찬탈자", seats: 1 },
+          ],
+        },
+      ],
+    },
+    {
+      realm: "녹타르",
+      code: "NOCTAR BLOODLINE LEDGER",
+      summary: "네메시스와 뤼네의 상층 혈통권, 실질 권한 계보, 복수 좌석이 허용된 고정 권좌를 묶은 야권 명부.",
+      accent: "from-fuchsia-400/18 via-rose-400/8 to-transparent",
+      organizations: [
+        {
+          name: "네메시스",
+          code: "NEMESIS",
+          theme: "border-fuchsia-400/20 bg-fuchsia-500/10 text-fuchsia-100",
+          positions: [
+            { title: "카사 프리마", seats: 2 },
+            { title: "카르멘", seats: 3 },
+          ],
+        },
+        {
+          name: "뤼네",
+          code: "LUNE",
+          theme: "border-rose-400/20 bg-rose-500/10 text-rose-100",
+          positions: [
+            { title: "헤더 뤼네", seats: 2 },
+            { title: "메시아 뤼네", seats: 2 },
+          ],
+        },
+      ],
+    },
   ]
 
+  const totalOrganizations = throneArchives.reduce((sum, realm) => sum + realm.organizations.length, 0)
+  const totalTitles = throneArchives.reduce(
+    (sum, realm) => sum + realm.organizations.reduce((inner, organization) => inner + organization.positions.length, 0),
+    0
+  )
+  const totalSeats = throneArchives.reduce(
+    (sum, realm) =>
+      sum +
+      realm.organizations.reduce(
+        (inner, organization) => inner + organization.positions.reduce((seatSum, position) => seatSum + position.seats, 0),
+        0
+      ),
+    0
+  )
+  const seatDistribution = throneArchives.map((realm) => {
+    const seats = realm.organizations.reduce(
+      (sum, organization) => sum + organization.positions.reduce((seatSum, position) => seatSum + position.seats, 0),
+      0
+    )
+
+    return {
+      realm: realm.realm,
+      seats,
+      ratio: Math.round((seats / totalSeats) * 100),
+    }
+  })
+
   return (
-    <div className="flex h-full flex-col p-4 sm:p-6">
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4 sm:p-6 lg:overflow-hidden">
       <div className="mb-5 sm:mb-6">
         <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
           <Shield className="h-5 w-5 text-primary" />
-          역량 감사
+          권좌 명부
         </h2>
         <p className="mt-1 text-xs tracking-wider text-muted-foreground">
-          CAPABILITY AUDIT SYSTEM
+          THRONE REGISTRY
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-        <div className="rounded-xl border border-border/70 bg-card/70 p-4">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <span className="text-xs text-muted-foreground">총 활성 요원</span>
+      <section className="relative overflow-hidden rounded-[1.6rem] border border-primary/20 bg-[linear-gradient(135deg,rgba(8,17,32,0.96),rgba(13,27,42,0.84))] px-4 py-5 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.75)] sm:px-5 sm:py-6">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(244,63,94,0.12),transparent_28%)]" />
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[10px] tracking-[0.28em] text-primary/80">EXECUTIVE SEAT ARCHIVE</p>
+            <h3 className="mt-3 text-[1.7rem] font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-[2.15rem]">
+              엘모라와 녹타르의 정상부를 한 장의 명부로 봉인합니다.
+            </h3>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
+              협회의 찬탈자, 천칭과 천축, 그리고 녹타르 상층 혈통권까지. 실질 권한을 보유한 좌석만을 선별해 보관하는
+              최상위 열람 구역입니다.
+            </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-foreground">247</p>
-        </div>
-        <div className="rounded-xl border border-border/70 bg-card/70 p-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-primary" />
-            <span className="text-xs text-muted-foreground">평균 역량 지수</span>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-foreground">84.7</p>
-        </div>
-      </div>
 
-      <div className="mt-5 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card/70 sm:mt-6">
-        <div className="border-b border-border/70 p-4">
-          <h3 className="text-sm font-medium text-foreground">요원 목록</h3>
-        </div>
-        <div className="h-full divide-y divide-border/70 overflow-y-auto">
-          {agents.map((agent) => (
-            <div
-              key={agent.id}
-              className="flex flex-col gap-3 p-4 transition-colors hover:bg-secondary/30 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                  {agent.name.slice(0, 1)}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-primary">{agent.id}</span>
-                    <span className="text-sm font-medium text-foreground">{agent.name}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{agent.rank}</span>
-                </div>
+          <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[420px]">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-primary">
+                <Users className="h-4 w-4" />
+                <span className="text-[11px] tracking-[0.18em] text-muted-foreground">소속 기관</span>
               </div>
-              <div className="flex items-center justify-between gap-4 sm:justify-end sm:gap-6">
-                <div className="w-24">
-                  <div className="mb-1 flex justify-between text-xs">
-                    <span className="text-muted-foreground">역량</span>
-                    <span className="text-foreground">{agent.capability}%</span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${agent.capability}%` }}
-                    />
-                  </div>
-                </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    agent.status === "현장 배치" || agent.status === "임무 수행"
-                      ? "bg-emerald-500/10 text-emerald-500"
-                      : agent.status === "대기"
-                      ? "bg-primary/10 text-primary"
-                      : "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  {agent.status}
-                </span>
-              </div>
+              <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-foreground">{totalOrganizations}</p>
             </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-primary">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-[11px] tracking-[0.18em] text-muted-foreground">직위군</span>
+              </div>
+              <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-foreground">{totalTitles}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-primary">
+                <Lock className="h-4 w-4" />
+                <span className="text-[11px] tracking-[0.18em] text-muted-foreground">지정 권좌</span>
+              </div>
+              <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-foreground">{totalSeats}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative mt-5 grid gap-3 border-t border-white/10 pt-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p className="text-[10px] tracking-[0.22em] text-primary/75">LUNAR CLAIMANTS</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">월식협회 및 해결사 계통 찬탈자 7석 보관</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p className="text-[10px] tracking-[0.22em] text-primary/75">BALANCE / AXIS</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">황혼, 여명, 서광, 명멸의 천칭·천축 8석 보관</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p className="text-[10px] tracking-[0.22em] text-primary/75">NOCTAR BLOOD SEATS</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">네메시스와 뤼네의 상층 혈통권 9석 기록</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+            <p className="text-[10px] tracking-[0.22em] text-primary/75">ACCESS GRADE</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">의전 등급 알파 이상 열람 권한 필요</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-5 grid min-h-0 flex-1 gap-4 lg:mt-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.9fr)] lg:overflow-hidden">
+        <div className="space-y-4 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+          {throneArchives.map((realm) => (
+            <section
+              key={realm.realm}
+              className="relative overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/75 p-4 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.65)] sm:p-5"
+            >
+              <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br opacity-100", realm.accent)} />
+              <div className="relative">
+                <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-[10px] tracking-[0.24em] text-primary/80">{realm.code}</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-foreground">{realm.realm}</h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{realm.summary}</p>
+                  </div>
+                  <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] tracking-[0.2em] text-primary">
+                    {realm.organizations.length} ORGANIZATIONS
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 xl:grid-cols-2">
+                  {realm.organizations.map((organization) => {
+                    const organizationSeats = organization.positions.reduce((sum, position) => sum + position.seats, 0)
+
+                    return (
+                      <article
+                        key={organization.name}
+                        className="group relative overflow-hidden rounded-2xl border border-border/70 bg-background/45 p-4 transition-transform duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background/55"
+                      >
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-70" />
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[10px] tracking-[0.22em] text-muted-foreground">{organization.code}</p>
+                            <h4 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-foreground">{organization.name}</h4>
+                          </div>
+                          <span className={cn("rounded-full border px-2.5 py-1 text-[11px] tracking-[0.16em]", organization.theme)}>
+                            {organizationSeats} SEATS
+                          </span>
+                        </div>
+
+                        <div className="mt-4 space-y-2.5">
+                          {organization.positions.map((position) => (
+                            <div
+                              key={`${organization.name}-${position.title}`}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/10 px-3 py-3"
+                            >
+                              <div>
+                                <p className="text-sm font-medium leading-6 text-foreground">{position.title}</p>
+                                <p className="text-[11px] tracking-[0.14em] text-muted-foreground">{position.seats > 1 ? "복수 좌석 지정" : "단일 권좌 지정"}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {Array.from({ length: position.seats }).map((_, index) => (
+                                  <span
+                                    key={`${position.title}-${index}`}
+                                    className={cn("h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.14)]", position.seats > 1 ? "bg-primary/85" : "bg-foreground/80")}
+                                  />
+                                ))}
+                                <span className="ml-2 font-mono text-xs text-primary">{position.seats.toString().padStart(2, "0")}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              </div>
+            </section>
           ))}
         </div>
+
+        <aside className="space-y-4 lg:min-h-0 lg:overflow-y-auto lg:pl-1">
+          <section className="rounded-[1.4rem] border border-border/70 bg-card/75 p-4 sm:p-5">
+            <div className="flex items-center gap-2 text-primary">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-[11px] tracking-[0.18em] text-muted-foreground">권역 점유율</span>
+            </div>
+            <div className="mt-4 space-y-4">
+              {seatDistribution.map((item) => (
+                <div key={item.realm}>
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-foreground">{item.realm}</span>
+                    <span className="font-mono text-primary">{item.seats} / {totalSeats}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-secondary/80">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-primary via-sky-400 to-cyan-300"
+                      style={{ width: `${item.ratio}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[11px] tracking-[0.14em] text-muted-foreground">{item.ratio}% OF REGISTERED SEATS</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-[1.4rem] border border-primary/20 bg-[linear-gradient(180deg,rgba(6,14,24,0.92),rgba(9,19,35,0.78))] p-4 shadow-[0_18px_48px_-28px_rgba(0,0,0,0.72)] sm:p-5">
+            <p className="text-[10px] tracking-[0.24em] text-primary/80">ARCHIVAL DIRECTIVES</p>
+            <div className="mt-4 space-y-3 text-sm leading-6 text-foreground/90">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                권좌 명부는 실질 권한과 상징 권한이 동시에 부여된 직위만을 보존합니다.
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                복수 좌석 허용 직위는 네메시스 카사 프리마, 카르멘, 헤더 뤼네, 메시아 뤼네로 제한됩니다.
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                찬탈자와 천칭, 천축 계열은 조직의 방향성과 사법적 무게를 동시에 대표하는 상징 권좌로 분류됩니다.
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[1.4rem] border border-border/70 bg-card/75 p-4 sm:p-5">
+            <p className="text-[10px] tracking-[0.24em] text-primary/80">SEALED INDEX</p>
+            <div className="mt-4 space-y-3">
+              {[
+                "월식협회 및 해결사 찬탈자 계열",
+                "황혼·여명·서광·명멸 협회 천칭/천축",
+                "네메시스 카사 프리마 / 카르멘",
+                "뤼네 헤더 뤼네 / 메시아 뤼네",
+              ].map((item, index) => (
+                <div key={item} className="flex items-start gap-3 rounded-xl bg-secondary/30 px-3 py-3">
+                  <span className="mt-0.5 font-mono text-xs text-primary">{String(index + 1).padStart(2, "0")}</span>
+                  <p className="text-sm leading-6 text-foreground">{item}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </aside>
       </div>
     </div>
   )
@@ -654,7 +889,7 @@ export default function Dashboard() {
   const mobileMenuItems = [
     { id: "chat", label: "아카식", icon: Sparkles },
     { id: "worldview", label: "세계관", icon: Globe },
-    { id: "audit", label: "역량", icon: Shield },
+    { id: "audit", label: "권좌", icon: Shield },
     { id: "archive", label: "보관소", icon: Lock },
   ]
 

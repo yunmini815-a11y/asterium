@@ -19,10 +19,10 @@ const menuItems = [
   },
   {
     id: "audit",
-    label: "역량 감사",
-    labelEn: "CAPABILITY AUDIT",
+    label: "권좌 명부",
+    labelEn: "THRONE REGISTRY",
     icon: Shield,
-    description: "인원 역량 평가 시스템",
+    description: "고위직 인물 열람고",
   },
   {
     id: "archive",
