@@ -382,7 +382,7 @@ function ArchivePanel() {
         </div>
       </div>
 
-      <div className="grid flex-1 gap-3 overflow-hidden lg:grid-cols-2">
+      <div className="grid gap-3 lg:flex-1 lg:overflow-hidden lg:grid-cols-2">
         <div className="order-2 lg:order-1">
           <div className="relative lg:hidden">
             <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-7 bg-gradient-to-r from-background via-background/70 to-transparent" />
@@ -566,7 +566,7 @@ function ArchivePanel() {
         <article
           ref={detailPanelRef}
           className={cn(
-            "order-1 flex min-h-[320px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px]",
+            "order-1 flex min-h-[320px] flex-col rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px] lg:overflow-hidden",
             detailPulse && "border-primary/40 shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_14px_36px_rgba(15,23,42,0.28)]"
           )}
         >
