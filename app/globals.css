@@ -170,6 +170,15 @@
     backdrop-filter: blur(10px);
   }
 
+  .archive-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .archive-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
   .subtle-grid {
     background-image:
       linear-gradient(to right, color-mix(in oklch, var(--border) 42%, transparent) 1px, transparent 1px),

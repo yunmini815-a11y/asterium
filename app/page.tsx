@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
 import { cn } from "@/lib/utils"
-import { Globe, Shield, Lock, FileText, Users, AlertTriangle, Fingerprint } from "lucide-react"
+import { Globe, Shield, Lock, FileText, Users, AlertTriangle, Fingerprint, Sparkles, ChevronRight } from "lucide-react"
 
 function WorldviewPanel() {
   const worldviewData = [
@@ -251,8 +251,13 @@ function ArchivePanel() {
 
   const [selectedDocId, setSelectedDocId] = useState(documents[0].id)
   const [revealedLineCount, setRevealedLineCount] = useState(0)
+  const [mobileHintVisible, setMobileHintVisible] = useState(true)
+  const [mobileNudgeActive, setMobileNudgeActive] = useState(false)
+  const [detailPulse, setDetailPulse] = useState(false)
   const detailPanelRef = useRef<HTMLElement>(null)
+  const mobileListRef = useRef<HTMLDivElement>(null)
   const selectedDoc = documents.find((doc) => doc.id === selectedDocId) ?? documents[0]
+  const selectedDocIndex = documents.findIndex((doc) => doc.id === selectedDocId)
 
   useEffect(() => {
     setRevealedLineCount(0)
@@ -269,6 +274,56 @@ function ArchivePanel() {
 
     return () => clearInterval(timer)
   }, [selectedDocId, selectedDoc.content.length])
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 1024
+    if (!isMobile) {
+      setMobileHintVisible(false)
+      return
+    }
+
+    setMobileHintVisible(true)
+
+    const timer = window.setTimeout(() => {
+      setMobileHintVisible(false)
+    }, 3200)
+
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 1024
+    if (!isMobile || !mobileListRef.current) return
+
+    const container = mobileListRef.current
+    const nudgeStart = window.setTimeout(() => {
+      setMobileNudgeActive(true)
+      container.scrollTo({ left: 28, behavior: "smooth" })
+    }, 550)
+
+    const nudgeReset = window.setTimeout(() => {
+      container.scrollTo({ left: 0, behavior: "smooth" })
+      setMobileNudgeActive(false)
+    }, 1300)
+
+    return () => {
+      window.clearTimeout(nudgeStart)
+      window.clearTimeout(nudgeReset)
+    }
+  }, [])
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 1024
+    if (!isMobile) return
+
+    const activeCard = mobileListRef.current?.children[selectedDocIndex] as HTMLElement | undefined
+    activeCard?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+
+    setDetailPulse(true)
+    const timer = window.setTimeout(() => setDetailPulse(false), 520)
+
+    return () => window.clearTimeout(timer)
+  }, [selectedDocIndex])
 
   return (
     <div className="flex h-full flex-col p-4 sm:p-6">
@@ -293,8 +348,149 @@ function ArchivePanel() {
         </p>
       </div>
 
+      <div
+        className={cn(
+          "mb-3 flex items-center justify-between rounded-xl border border-border/60 bg-card/50 px-3 py-2 transition-all duration-500 lg:hidden",
+          mobileHintVisible ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-70"
+        )}
+      >
+        <div>
+          <p className="text-[10px] tracking-[0.24em] text-primary/85">ARCHIVE SLIDE</p>
+          <p className="mt-1 text-xs text-muted-foreground">문서를 좌우로 넘겨 다른 기록을 확인하세요.</p>
+        </div>
+        <div className="flex items-center gap-1 text-primary/80">
+          <span className="text-[10px] tracking-widest">SWIPE</span>
+          <div className="flex items-center">
+            <ChevronRight className="h-4 w-4 -mr-1 animate-pulse" />
+            <ChevronRight className="h-4 w-4 animate-pulse" />
+          </div>
+        </div>
+      </div>
+
       <div className="grid flex-1 gap-3 overflow-hidden lg:grid-cols-2">
-        <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:block lg:space-y-3 lg:overflow-y-auto lg:pr-1">
+        <div className="order-2 lg:order-1">
+          <div className="relative lg:hidden">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-7 bg-gradient-to-r from-background via-background/70 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background via-background/75 to-transparent" />
+            <div
+              ref={mobileListRef}
+              className={cn(
+                "archive-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 scroll-smooth transition-transform duration-500",
+                mobileNudgeActive && "translate-x-1"
+              )}
+            >
+              {documents.map((doc) => {
+                const isActive = selectedDocId === doc.id
+
+                return (
+                  <button
+                    type="button"
+                    key={doc.id}
+                    onClick={() => {
+                      setSelectedDocId(doc.id)
+                      if (window.innerWidth < 1024) {
+                        detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                      }
+                    }}
+                    className={`group relative w-[84vw] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[1.35rem] border p-3 text-left transition-all duration-300 sm:w-[68vw] ${
+                      isActive
+                        ? "scale-[1.01] border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25),0_18px_40px_rgba(2,6,23,0.28)]"
+                        : "scale-[0.985] border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
+                    }`}
+                  >
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.14),transparent_38%)] transition-opacity duration-300",
+                        isActive ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {doc.level === "기밀" && (
+                      <span className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-red-400/95 via-red-500/80 to-red-700/65" />
+                    )}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-[10px] tracking-[0.18em] text-muted-foreground">
+                        <span>
+                          {String(documents.findIndex((item) => item.id === doc.id) + 1).padStart(2, "0")} / {String(documents.length).padStart(2, "0")}
+                        </span>
+                        <span>{isActive ? "ACTIVE FILE" : "ARCHIVE FILE"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                            <FileText className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-primary">{doc.id}</span>
+                              <span
+                                className={`rounded px-1.5 py-0.5 text-[10px] ${
+                                  doc.level === "기밀"
+                                    ? "border border-red-400/45 bg-red-500/20 text-red-200"
+                                    : doc.level === "보통"
+                                    ? "border border-sky-400/40 bg-sky-500/15 text-sky-200"
+                                    : "border border-border/70 bg-secondary/70 text-foreground/85"
+                                }`}
+                              >
+                                {doc.level}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 line-clamp-1 text-sm text-foreground">{doc.title}</p>
+                          </div>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{doc.date}</span>
+                      </div>
+                      <p className="line-clamp-2 text-[11px] text-muted-foreground">{doc.summary}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] tracking-[0.14em] text-primary/85">
+                          {isActive ? "SELECTED RECORD" : "TAP TO OPEN"}
+                        </p>
+                        <div className="flex items-center gap-1 text-primary/70">
+                          <span className="text-[10px] tracking-widest">NEXT</span>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </div>
+                      </div>
+                      <div className="mt-1 h-1 overflow-hidden rounded-full bg-secondary/80">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all duration-300",
+                            isActive ? "bg-primary shadow-[0_0_10px_rgba(56,189,248,0.65)]" : "bg-primary/30"
+                          )}
+                          style={{ width: `${((selectedDocIndex + 1) / documents.length) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-center justify-center gap-1.5 lg:hidden">
+            {documents.map((doc, index) => {
+              const isActive = doc.id === selectedDocId
+              return (
+                <button
+                  key={doc.id}
+                  type="button"
+                  aria-label={`${index + 1}번째 문서 보기`}
+                  onClick={() => {
+                    setSelectedDocId(doc.id)
+                    mobileListRef.current?.children[index]?.scrollIntoView({
+                      behavior: "smooth",
+                      inline: "center",
+                      block: "nearest",
+                    })
+                  }}
+                  className={cn(
+                    "h-1.5 rounded-full transition-all duration-200",
+                    isActive ? "w-7 bg-primary shadow-[0_0_10px_rgba(56,189,248,0.65)]" : "w-2 bg-border"
+                  )}
+                />
+              )
+            })}
+          </div>
+
+          <div className="mt-3 hidden lg:block lg:space-y-3 lg:overflow-y-auto lg:pr-1">
           {documents.map((doc) => {
             const isActive = selectedDocId === doc.id
 
@@ -349,9 +545,17 @@ function ArchivePanel() {
               </button>
             )
           })}
+          </div>
         </div>
 
-        <article ref={detailPanelRef} className="order-1 flex min-h-[300px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card/80 lg:order-2 lg:min-h-[260px]">
+        <article
+          ref={detailPanelRef}
+          className={cn(
+            "order-1 flex min-h-[300px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px]",
+            detailPulse && "border-primary/40 shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_14px_36px_rgba(15,23,42,0.28)]"
+          )}
+        >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.16),transparent_70%)] opacity-80" />
           {selectedDoc.level === "기밀" && (
             <div className="h-1 w-full bg-gradient-to-r from-red-500/85 via-red-400/70 to-transparent" />
           )}
@@ -474,10 +678,10 @@ export default function Dashboard() {
   }, [])
 
   const mobileMenuItems = [
-    { id: "chat", label: "아카식" },
-    { id: "worldview", label: "세계관" },
-    { id: "audit", label: "역량" },
-    { id: "archive", label: "보관소" },
+    { id: "chat", label: "아카식", icon: Sparkles },
+    { id: "worldview", label: "세계관", icon: Globe },
+    { id: "audit", label: "역량", icon: Shield },
+    { id: "archive", label: "보관소", icon: Lock },
   ]
 
   const renderContent = () => {
@@ -561,25 +765,45 @@ export default function Dashboard() {
 
         <nav
           className={cn(
-            "flex gap-1.5 overflow-x-auto border-b border-border/70 px-3 py-2.5 transition-all duration-500 lg:hidden",
+            "flex border-b border-border/70 transition-all duration-500 lg:hidden",
             introReady ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
           )}
           style={{ transitionDelay: introReady ? "140ms" : "0ms" }}
         >
           {mobileMenuItems.map((item) => {
             const isActive = activeMenu === item.id
+            const Icon = item.icon
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveMenu(item.id)}
                 className={cn(
-                  "shrink-0 rounded-full border px-3 py-1.5 text-[11px] tracking-wide transition-colors",
-                  isActive
-                    ? "border-primary/50 bg-primary/10 text-primary"
-                    : "border-border/70 bg-card/60 text-muted-foreground"
+                  "relative flex flex-1 flex-col items-center gap-1.5 py-3 text-[10px] font-medium tracking-widest transition-all duration-200",
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                {item.label}
+                {isActive && (
+                  <>
+                    <span className="absolute inset-x-2 top-0 h-[2px] rounded-b-full bg-primary/80 shadow-[0_0_8px_rgba(56,189,248,0.7)]" />
+                    <span className="absolute inset-0 bg-primary/[0.05]" />
+                  </>
+                )}
+                <span
+                  className={cn(
+                    "relative flex h-8 w-8 items-center justify-center rounded-xl transition-all duration-200",
+                    isActive
+                      ? "bg-primary/15 shadow-[0_0_14px_rgba(56,189,248,0.35)]"
+                      : "bg-secondary/60"
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "h-[17px] w-[17px] transition-all",
+                      isActive && "drop-shadow-[0_0_5px_rgba(56,189,248,0.9)]"
+                    )}
+                  />
+                </span>
+                <span className="relative">{item.label}</span>
               </button>
             )
           })}
