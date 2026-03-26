@@ -577,7 +577,7 @@ function AuditPanel({
                                   </div>
                                 ))}
                               </div>
-                              <p className="mt-3 text-[12px] leading-6 text-muted-foreground">엘모라 측 고위 좌석은 총 {elmoraSeatCount}석. 월식의 정점과 사대협회의 천칭 및 천축으로 이루어진다.</p>
+                              <p className="mt-3 text-[12px] leading-5 text-muted-foreground">엘모라 상층 {elmoraSeatCount}석. 월식 정점과 사대협회 천칭·천축으로 구성된다.</p>
                             </div>
                           </div>
                         ) : null}
@@ -598,7 +598,7 @@ function AuditPanel({
                                     <span key={domain} className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-foreground/90">{domain}</span>
                                   ))}
                                 </div>
-                                <p className="mt-3 text-[12px] leading-6 text-muted-foreground">실전형 권좌 {fixerClaimants.length}석 중 공석 감시는 {fixerVacantCount}석. 다섯 기능축을 따라 현장 흔적이 먼저 남는 계열이다.</p>
+                                <p className="mt-3 text-[12px] leading-5 text-muted-foreground">실전형 권좌 {fixerClaimants.length}석. 공석 감시는 {fixerVacantCount}석이며, 다섯 기능축으로 분산된다.</p>
                               </div>
                             </div>
 
@@ -623,6 +623,7 @@ function AuditPanel({
 
                                     {holder ? (
                                       <div className="mt-3 space-y-2">
+                                        <p className="text-[10px] tracking-[0.14em] text-primary/75">{holder.state}</p>
                                         <p className="throne-chronicle-clamp text-[11px] leading-5 text-muted-foreground">{holder.chronicle}</p>
                                       </div>
                                     ) : null}
@@ -765,7 +766,7 @@ function AuditPanel({
                           </div>
                         ))}
                       </div>
-                      <p className="mt-3 text-[12px] leading-6 text-muted-foreground">녹타르는 {noctarOrganizations.length}개 혈계 조직, {noctarSeatCount}석의 상층 좌석으로 유지된다. 기본 결은 혈통이지만, 일부는 포식 흔적을 남긴다.</p>
+                      <p className="mt-3 text-[12px] leading-5 text-muted-foreground">녹타르는 {noctarOrganizations.length}개 혈계 조직과 {noctarSeatCount}석으로 유지된다. 기본은 혈통, 일부는 포식 흔적을 남긴다.</p>
                     </section>
                   </div>
                 ) : null}
