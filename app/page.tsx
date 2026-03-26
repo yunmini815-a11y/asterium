@@ -257,12 +257,11 @@ function ArchivePanel() {
   const [mobileNudgeActive, setMobileNudgeActive] = useState(false)
   const [detailPulse, setDetailPulse] = useState(false)
   const [mobileCarouselApi, setMobileCarouselApi] = useState<CarouselApi>()
-  const detailPanelRef = useRef<HTMLElement>(null)
 
   const isMobileViewport = () => typeof window !== "undefined" && window.innerWidth < 1024
-  const effectiveSelectedDocId = isMobileViewport() ? mobileSelectedDocId : selectedDocId
-  const selectedDoc = documents.find((doc) => doc.id === effectiveSelectedDocId) ?? documents[0]
-  const selectedDocIndex = documents.findIndex((doc) => doc.id === effectiveSelectedDocId)
+  const selectedDoc = documents.find((doc) => doc.id === selectedDocId) ?? documents[0]
+  const mobileSelectedDoc = documents.find((doc) => doc.id === mobileSelectedDocId) ?? documents[0]
+  const mobileSelectedDocIndex = documents.findIndex((doc) => doc.id === mobileSelectedDocId)
 
   useEffect(() => {
     setRevealedLineCount(0)
@@ -278,7 +277,7 @@ function ArchivePanel() {
     }, 220)
 
     return () => clearInterval(timer)
-  }, [effectiveSelectedDocId, selectedDoc.content.length])
+  }, [selectedDocId, selectedDoc.content.length])
 
   useEffect(() => {
     const isMobile = window.innerWidth < 1024
@@ -321,7 +320,7 @@ function ArchivePanel() {
     const timer = window.setTimeout(() => setDetailPulse(false), 520)
 
     return () => window.clearTimeout(timer)
-  }, [effectiveSelectedDocId])
+  }, [selectedDocId])
 
   useEffect(() => {
     if (!mobileCarouselApi) return
@@ -345,6 +344,85 @@ function ArchivePanel() {
       mobileCarouselApi.off("reInit", syncSelectedDoc)
     }
   }, [documents, mobileCarouselApi, mobileSelectedDocId])
+
+  const renderArchiveDetail = (doc: (typeof documents)[number], mobile = false) => {
+    const isSecret = doc.level === "기밀"
+    const isDesktopActive = doc.id === selectedDocId
+    const bodyLines = mobile
+      ? doc.content
+      : doc.id === selectedDocId
+      ? doc.content.slice(0, revealedLineCount)
+      : doc.content
+
+    return (
+      <article
+        className={cn(
+          "relative flex min-h-[360px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80",
+          mobile
+            ? "min-h-[420px]"
+            : "lg:min-h-[260px]",
+          !mobile && detailPulse && isDesktopActive && "border-primary/40 shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_14px_36px_rgba(15,23,42,0.28)]"
+        )}
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.16),transparent_70%)] opacity-80" />
+        {isSecret && (
+          <div className="h-1 w-full bg-gradient-to-r from-red-500/85 via-red-400/70 to-transparent" />
+        )}
+        <div className={cn("border-b border-border/70", mobile ? "p-4" : "p-4")}>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-primary">{doc.id}</span>
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] ${
+                isSecret
+                  ? "border border-red-400/45 bg-red-500/20 text-red-200"
+                  : doc.level === "보통"
+                  ? "border border-sky-400/40 bg-sky-500/15 text-sky-200"
+                  : "border border-border/70 bg-secondary/70 text-foreground/85"
+              }`}
+            >
+              {doc.level}
+            </span>
+            <span className={cn("ml-auto text-muted-foreground", mobile ? "text-xs" : "text-[13px] sm:text-xs")}>
+              {doc.date}
+            </span>
+          </div>
+          <h3 className={cn("font-semibold text-foreground", mobile ? "mt-2 text-base leading-6" : "mt-2 text-[18px] leading-7 sm:text-base sm:leading-normal")}>
+            {doc.title}
+          </h3>
+          <p className={cn("text-muted-foreground", mobile ? "mt-2 text-[12px] leading-5" : "mt-2 text-[13px] leading-6 sm:mt-1 sm:text-xs sm:leading-normal")}>
+            {doc.summary}
+          </p>
+        </div>
+
+        <div
+          className={cn(
+            "archive-scroll flex-1 overflow-x-hidden p-4 text-foreground/90",
+            mobile
+              ? "space-y-3 overflow-y-auto text-[12px] leading-6"
+              : "space-y-2.5 overflow-y-visible pb-6 text-[12px] leading-6 tracking-[-0.01em] sm:text-sm sm:leading-7 lg:overflow-y-auto lg:text-sm lg:leading-relaxed"
+          )}
+        >
+          {bodyLines.map((line, index) => (
+            <p
+              key={`${doc.id}-${index}`}
+              className={cn(
+                "break-keep [overflow-wrap:anywhere]",
+                !mobile && doc.id === selectedDocId && "animate-in fade-in-0 duration-300"
+              )}
+            >
+              {line}
+            </p>
+          ))}
+
+          {!mobile && doc.id === selectedDocId && revealedLineCount < doc.content.length && (
+            <p className="font-mono text-xs text-primary/80">
+              기록 열람 중<span className="animate-pulse">▋</span>
+            </p>
+          )}
+        </div>
+      </article>
+    )
+  }
 
   return (
     <div className="flex h-full flex-col p-4 sm:p-6">
@@ -388,132 +466,57 @@ function ArchivePanel() {
         </div>
       </div>
 
-      <div className="grid gap-4 pb-5 lg:flex-1 lg:overflow-hidden lg:gap-3 lg:pb-0 lg:grid-cols-2">
-        <div className="order-2 lg:order-1">
-          <div className="relative lg:hidden">
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-7 bg-gradient-to-r from-background via-background/70 to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background via-background/75 to-transparent" />
-            <Carousel
-              setApi={setMobileCarouselApi}
-              opts={{ align: "start", dragFree: false, containScroll: "trimSnaps", skipSnaps: false }}
-              className={cn("px-1 transition-transform duration-500", mobileNudgeActive && "translate-x-1")}
-            >
-              <CarouselContent className="archive-scroll -ml-2 pb-2 pr-10">
-              {documents.map((doc) => {
-                const isActive = mobileSelectedDocId === doc.id
-
-                return (
-                  <CarouselItem key={doc.id} className="basis-[calc(100vw-2.5rem)] pl-2 sm:basis-[68vw]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!isActive) {
-                          setMobileSelectedDocId(doc.id)
-                          mobileCarouselApi?.scrollTo(documents.findIndex((item) => item.id === doc.id))
-                        }
-                        if (window.innerWidth < 1024) {
-                          requestAnimationFrame(() => {
-                            detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-                          })
-                        }
-                      }}
-                      className={`group relative w-full overflow-hidden rounded-[1.35rem] border p-3.5 text-left transition-all duration-300 ${
-                        isActive
-                          ? "scale-[1.01] border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25),0_18px_40px_rgba(2,6,23,0.28)]"
-                          : "scale-[0.985] border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
-                      }`}
-                    >
-                    <div
-                      className={cn(
-                        "pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.14),transparent_38%)] transition-opacity duration-300",
-                        isActive ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {doc.level === "기밀" && (
-                      <span className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-red-400/95 via-red-500/80 to-red-700/65" />
-                    )}
-                    <div className="flex flex-col gap-2.5">
-                      <div className="flex items-center justify-between text-[10px] tracking-[0.18em] text-muted-foreground">
-                        <span>
-                          {String(documents.findIndex((item) => item.id === doc.id) + 1).padStart(2, "0")} / {String(documents.length).padStart(2, "0")}
-                        </span>
-                        <span>{isActive ? "ACTIVE FILE" : "ARCHIVE FILE"}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                            <FileText className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs text-primary">{doc.id}</span>
-                              <span
-                                className={`rounded px-1.5 py-0.5 text-[10px] ${
-                                  doc.level === "기밀"
-                                    ? "border border-red-400/45 bg-red-500/20 text-red-200"
-                                    : doc.level === "보통"
-                                    ? "border border-sky-400/40 bg-sky-500/15 text-sky-200"
-                                    : "border border-border/70 bg-secondary/70 text-foreground/85"
-                                }`}
-                              >
-                                {doc.level}
-                              </span>
-                            </div>
-                            <p className="mt-0.5 line-clamp-1 text-[15px] leading-5 text-foreground sm:text-sm sm:leading-normal">{doc.title}</p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{doc.date}</span>
-                      </div>
-                      <p className="line-clamp-2 text-[12px] leading-5 text-muted-foreground sm:text-[11px] sm:leading-normal">{doc.summary}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] tracking-[0.14em] text-primary/85">
-                          {isActive ? "SELECTED RECORD" : "TAP TO OPEN"}
-                        </p>
-                        <div className="flex items-center gap-1 text-primary/70">
-                          <span className="text-[10px] tracking-widest">NEXT</span>
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </div>
-                      </div>
-                      <div className="mt-1 h-1 overflow-hidden rounded-full bg-secondary/80">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all duration-300",
-                            isActive ? "bg-primary shadow-[0_0_10px_rgba(56,189,248,0.65)]" : "bg-primary/30"
-                          )}
-                          style={{ width: `${((selectedDocIndex + 1) / documents.length) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                    </button>
-                  </CarouselItem>
-                )
-              })}
-              </CarouselContent>
-            </Carousel>
+      <div className="lg:hidden">
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-border/60 bg-card/55 px-3 py-2">
+          <div>
+            <p className="text-[10px] tracking-[0.2em] text-primary/85">CURRENT RECORD</p>
+            <p className="mt-1 text-sm text-foreground">{mobileSelectedDoc.title}</p>
           </div>
-
-          <div className="mt-2 flex items-center justify-center gap-1.5 lg:hidden">
-            {documents.map((doc, index) => {
-              const isActive = doc.id === mobileSelectedDocId
-              return (
-                <button
-                  key={doc.id}
-                  type="button"
-                  aria-label={`${index + 1}번째 문서 보기`}
-                  onClick={() => {
-                    setMobileSelectedDocId(doc.id)
-                    mobileCarouselApi?.scrollTo(index)
-                  }}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-200",
-                    isActive ? "w-7 bg-primary shadow-[0_0_10px_rgba(56,189,248,0.65)]" : "w-2 bg-border"
-                  )}
-                />
-              )
-            })}
+          <div className="text-right">
+            <p className="text-[10px] tracking-[0.18em] text-muted-foreground">{String(mobileSelectedDocIndex + 1).padStart(2, "0")} / {String(documents.length).padStart(2, "0")}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">좌우로 문서를 전환</p>
           </div>
+        </div>
 
-          <div className="mt-3 hidden lg:block lg:space-y-3 lg:overflow-y-auto lg:pr-1">
+        <Carousel
+          setApi={setMobileCarouselApi}
+          opts={{ align: "start", dragFree: false, containScroll: "trimSnaps", skipSnaps: false }}
+          className={cn("transition-transform duration-500", mobileNudgeActive && "translate-x-1")}
+        >
+          <CarouselContent className="-ml-0">
+            {documents.map((doc) => (
+              <CarouselItem key={doc.id} className="pl-0">
+                {renderArchiveDetail(doc, true)}
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+
+        <div className="mt-3 flex items-center justify-center gap-1.5">
+          {documents.map((doc, index) => {
+            const isActive = doc.id === mobileSelectedDocId
+
+            return (
+              <button
+                key={doc.id}
+                type="button"
+                aria-label={`${index + 1}번째 문서 보기`}
+                onClick={() => {
+                  setMobileSelectedDocId(doc.id)
+                  mobileCarouselApi?.scrollTo(index)
+                }}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-200",
+                  isActive ? "w-7 bg-primary shadow-[0_0_10px_rgba(56,189,248,0.65)]" : "w-2 bg-border"
+                )}
+              />
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="hidden gap-3 pb-0 lg:grid lg:flex-1 lg:grid-cols-2 lg:overflow-hidden">
+        <div className="order-1 lg:space-y-3 lg:overflow-y-auto lg:pr-1">
           {documents.map((doc) => {
             const isActive = selectedDocId === doc.id
 
@@ -521,12 +524,7 @@ function ArchivePanel() {
               <button
                 type="button"
                 key={doc.id}
-                onClick={() => {
-                  setSelectedDocId(doc.id)
-                  if (window.innerWidth < 1024) {
-                    detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                  }
-                }}
+                onClick={() => setSelectedDocId(doc.id)}
                 className={`group relative w-[84vw] shrink-0 cursor-pointer overflow-hidden rounded-xl border p-3 text-left transition-all sm:w-[68vw] lg:w-full lg:p-4 ${
                   isActive
                     ? "border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25)]"
@@ -568,61 +566,11 @@ function ArchivePanel() {
               </button>
             )
           })}
-          </div>
         </div>
 
-        <article
-          ref={detailPanelRef}
-          className={cn(
-            "relative order-1 flex min-h-[340px] flex-col overflow-visible rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px] lg:overflow-hidden",
-            detailPulse && "border-primary/40 shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_14px_36px_rgba(15,23,42,0.28)]"
-          )}
-        >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.16),transparent_70%)] opacity-80" />
-          {selectedDoc.level === "기밀" && (
-            <div className="h-1 w-full bg-gradient-to-r from-red-500/85 via-red-400/70 to-transparent" />
-          )}
-          <div className="border-b border-border/70 p-4 sm:p-4">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-primary">{selectedDoc.id}</span>
-              <span
-                className={`rounded px-1.5 py-0.5 text-[10px] ${
-                  selectedDoc.level === "기밀"
-                    ? "border border-red-400/45 bg-red-500/20 text-red-200"
-                    : selectedDoc.level === "보통"
-                    ? "border border-sky-400/40 bg-sky-500/15 text-sky-200"
-                    : "border border-border/70 bg-secondary/70 text-foreground/85"
-                }`}
-              >
-                {selectedDoc.level}
-              </span>
-              <span className="ml-auto text-[13px] text-muted-foreground sm:text-xs">{selectedDoc.date}</span>
-            </div>
-            <h3 className="mt-2 text-[18px] font-semibold leading-7 text-foreground sm:text-base sm:leading-normal">{selectedDoc.title}</h3>
-            <p className="mt-2 text-[13px] leading-6 text-muted-foreground sm:mt-1 sm:text-xs sm:leading-normal">{selectedDoc.summary}</p>
-          </div>
-
-          <div className="archive-scroll flex-1 space-y-2.5 overflow-x-hidden overflow-y-visible p-4 pb-6 text-[12px] leading-6 tracking-[-0.01em] text-foreground/90 sm:text-sm sm:leading-7 lg:overflow-y-auto lg:text-sm lg:leading-relaxed">
-            {selectedDoc.content.map((line, index) => {
-              if (index >= revealedLineCount) return null
-
-              return (
-                <p
-                  key={`${selectedDoc.id}-${index}`}
-                  className="animate-in fade-in-0 break-keep [overflow-wrap:anywhere] duration-300"
-                >
-                  {line}
-                </p>
-              )
-            })}
-
-            {revealedLineCount < selectedDoc.content.length && (
-              <p className="font-mono text-xs text-primary/80">
-                기록 열람 중<span className="animate-pulse">▋</span>
-              </p>
-            )}
-          </div>
-        </article>
+        <div className="order-2 min-h-0">
+          {renderArchiveDetail(selectedDoc)}
+        </div>
       </div>
     </div>
   )
