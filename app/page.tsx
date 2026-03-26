@@ -602,12 +602,15 @@ function ArchivePanel() {
             <p className="mt-2 text-[13px] leading-6 text-muted-foreground sm:mt-1 sm:text-xs sm:leading-normal">{selectedDoc.summary}</p>
           </div>
 
-          <div className="archive-scroll flex-1 space-y-4 overflow-visible p-4 pb-6 text-[14px] leading-7 text-foreground/90 sm:text-sm sm:leading-7 lg:overflow-y-auto lg:text-sm lg:leading-relaxed">
+          <div className="archive-scroll flex-1 space-y-2.5 overflow-x-hidden overflow-y-visible p-4 pb-6 text-[12px] leading-6 tracking-[-0.01em] text-foreground/90 sm:text-sm sm:leading-7 lg:overflow-y-auto lg:text-sm lg:leading-relaxed">
             {selectedDoc.content.map((line, index) => {
               if (index >= revealedLineCount) return null
 
               return (
-                <p key={`${selectedDoc.id}-${index}`} className="animate-in fade-in-0 duration-300">
+                <p
+                  key={`${selectedDoc.id}-${index}`}
+                  className="animate-in fade-in-0 break-keep [overflow-wrap:anywhere] duration-300"
+                >
                   {line}
                 </p>
               )
