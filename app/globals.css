@@ -258,6 +258,105 @@
     pointer-events: none;
   }
 
+  .throne-mobile-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+
+  .throne-mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .throne-mobile-snap-card {
+    scroll-snap-align: start;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 14px 30px rgba(2, 6, 23, 0.18);
+  }
+
+  .throne-mobile-summary-card {
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 16px 32px rgba(2, 6, 23, 0.22);
+  }
+
+  .throne-mobile-summary-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.95;
+  }
+
+  .throne-mobile-summary-card::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  .throne-mobile-summary-elmora::before {
+    background:
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.18) 0%, transparent 42%),
+      radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.12) 0%, transparent 34%);
+  }
+
+  .throne-mobile-summary-elmora::after {
+    background: linear-gradient(90deg, rgba(125, 211, 252, 0) 0%, rgba(125, 211, 252, 0.8) 50%, rgba(196, 181, 253, 0) 100%);
+  }
+
+  .throne-mobile-summary-fixer::before {
+    background:
+      radial-gradient(circle at top left, rgba(250, 204, 21, 0.18) 0%, transparent 40%),
+      radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.14) 0%, transparent 34%);
+  }
+
+  .throne-mobile-summary-fixer::after {
+    background: linear-gradient(90deg, rgba(250, 204, 21, 0) 0%, rgba(250, 204, 21, 0.86) 48%, rgba(125, 211, 252, 0.2) 74%, rgba(125, 211, 252, 0) 100%);
+  }
+
+  .throne-mobile-summary-noctar::before {
+    background:
+      radial-gradient(circle at top left, rgba(232, 121, 249, 0.16) 0%, transparent 40%),
+      radial-gradient(circle at bottom right, rgba(251, 113, 133, 0.18) 0%, transparent 36%);
+  }
+
+  .throne-mobile-summary-noctar::after {
+    background: linear-gradient(90deg, rgba(244, 114, 182, 0) 0%, rgba(244, 114, 182, 0.78) 48%, rgba(251, 113, 133, 0) 100%);
+  }
+
+  .throne-mobile-snap-fixer {
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(20, 18, 10, 0.84) 0%, rgba(11, 18, 30, 0.92) 100%),
+      radial-gradient(circle at top left, rgba(250, 204, 21, 0.16) 0%, transparent 42%);
+    border-color: rgba(250, 204, 21, 0.14);
+  }
+
+  .throne-mobile-snap-fixer::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(250, 204, 21, 0) 0%, rgba(250, 204, 21, 0.7) 45%, rgba(125, 211, 252, 0) 100%);
+    pointer-events: none;
+  }
+
+  .throne-chronicle-clamp {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
   .throne-hero-orbit {
     box-shadow: 0 0 28px rgba(56, 189, 248, 0.12);
     animation: throne-orbit-pulse 3.8s ease-in-out infinite;
@@ -806,11 +905,23 @@
       line-height: 1;
     }
 
+    .throne-mobile-summary-card {
+      border-radius: 1.15rem;
+    }
+
     .throne-faction-card .text-2xl,
     .throne-shell .text-2xl,
     .throne-hero .text-2xl {
       font-size: 1.45rem;
       line-height: 1.05;
+    }
+  }
+
+  @media (min-width: 641px) {
+    .throne-chronicle-clamp {
+      display: block;
+      -webkit-line-clamp: unset;
+      overflow: visible;
     }
   }
 
