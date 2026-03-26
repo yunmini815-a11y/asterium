@@ -357,7 +357,7 @@ function ArchivePanel() {
     return (
       <article
         className={cn(
-          "relative flex min-h-[360px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80",
+          "archive-panel-shell relative flex min-h-[360px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70",
           mobile
             ? "min-h-[420px]"
             : "lg:min-h-[260px]",
@@ -370,7 +370,7 @@ function ArchivePanel() {
         )}
         <div className={cn("border-b border-border/70", mobile ? "p-4" : "p-4")}>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-primary">{doc.id}</span>
+            <span className="archive-meta font-mono text-[11px] text-primary">{doc.id}</span>
             <span
               className={`rounded px-1.5 py-0.5 text-[10px] ${
                 isSecret
@@ -382,14 +382,14 @@ function ArchivePanel() {
             >
               {doc.level}
             </span>
-            <span className={cn("ml-auto text-muted-foreground", mobile ? "text-xs" : "text-[13px] sm:text-xs")}>
+            <span className={cn("archive-meta ml-auto text-muted-foreground", mobile ? "text-[10px]" : "text-[13px] sm:text-xs")}>
               {doc.date}
             </span>
           </div>
-          <h3 className={cn("font-semibold text-foreground", mobile ? "mt-2 text-base leading-6" : "mt-2 text-[18px] leading-7 sm:text-base sm:leading-normal")}>
+          <h3 className={cn("archive-heading font-semibold text-foreground", mobile ? "mt-2 text-[17px] leading-6" : "mt-2 text-[18px] leading-7 sm:text-base sm:leading-normal")}>
             {doc.title}
           </h3>
-          <p className={cn("text-muted-foreground", mobile ? "mt-2 text-[12px] leading-5" : "mt-2 text-[13px] leading-6 sm:mt-1 sm:text-xs sm:leading-normal")}>
+          <p className={cn("archive-summary", mobile ? "mt-2 text-[12px] leading-5" : "mt-2 text-[13px] leading-6 sm:mt-1 sm:text-xs sm:leading-normal")}>
             {doc.summary}
           </p>
         </div>
@@ -398,8 +398,8 @@ function ArchivePanel() {
           className={cn(
             "archive-scroll flex-1 overflow-x-hidden p-4 text-foreground/90",
             mobile
-              ? "space-y-3 overflow-y-auto text-[12px] leading-6"
-              : "space-y-2.5 overflow-y-visible pb-6 text-[12px] leading-6 tracking-[-0.01em] sm:text-sm sm:leading-7 lg:overflow-y-auto lg:text-sm lg:leading-relaxed"
+              ? "archive-body space-y-3 overflow-y-auto text-[12px] leading-6"
+              : "archive-body space-y-2.5 overflow-y-visible pb-6 text-[12px] leading-6 tracking-[-0.01em] sm:text-sm sm:leading-7 lg:overflow-y-auto lg:text-sm lg:leading-relaxed"
           )}
         >
           {bodyLines.map((line, index) => (
@@ -449,12 +449,12 @@ function ArchivePanel() {
 
       <div
         className={cn(
-          "mb-3 flex items-center justify-between rounded-xl border border-border/60 bg-card/50 px-3 py-2 transition-all duration-500 lg:hidden",
+          "archive-mobile-banner mb-3 flex items-center justify-between rounded-xl border border-border/60 px-3 py-2 transition-all duration-500 lg:hidden",
           mobileHintVisible ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-70"
         )}
       >
         <div>
-          <p className="text-[10px] tracking-[0.24em] text-primary/85">ARCHIVE SLIDE</p>
+          <p className="archive-kicker text-[10px]">ARCHIVE SLIDE</p>
           <p className="mt-1 text-[13px] leading-5 text-muted-foreground">문서를 좌우로 넘겨 다른 기록을 확인하세요.</p>
         </div>
         <div className="flex items-center gap-1 text-primary/80">
@@ -467,13 +467,13 @@ function ArchivePanel() {
       </div>
 
       <div className="lg:hidden">
-        <div className="mb-3 flex items-center justify-between rounded-xl border border-border/60 bg-card/55 px-3 py-2">
+        <div className="archive-mobile-banner archive-scan mb-3 flex items-center justify-between rounded-xl border border-border/60 px-3 py-3">
           <div>
-            <p className="text-[10px] tracking-[0.2em] text-primary/85">CURRENT RECORD</p>
-            <p className="mt-1 text-sm text-foreground">{mobileSelectedDoc.title}</p>
+            <p className="archive-kicker text-[10px]">CURRENT RECORD</p>
+            <p className="archive-heading mt-1 text-[15px] leading-5 text-foreground">{mobileSelectedDoc.title}</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] tracking-[0.18em] text-muted-foreground">{String(mobileSelectedDocIndex + 1).padStart(2, "0")} / {String(documents.length).padStart(2, "0")}</p>
+            <p className="archive-meta text-[10px] text-muted-foreground">{String(mobileSelectedDocIndex + 1).padStart(2, "0")} / {String(documents.length).padStart(2, "0")}</p>
             <p className="mt-1 text-[11px] text-muted-foreground">좌우로 문서를 전환</p>
           </div>
         </div>
@@ -527,7 +527,7 @@ function ArchivePanel() {
                 onClick={() => setSelectedDocId(doc.id)}
                 className={`group relative w-[84vw] shrink-0 cursor-pointer overflow-hidden rounded-xl border p-3 text-left transition-all sm:w-[68vw] lg:w-full lg:p-4 ${
                   isActive
-                    ? "border-primary/55 bg-primary/12 shadow-[0_0_0_1px_rgba(56,189,248,0.25)]"
+                    ? "archive-panel-shell border-primary/55 shadow-[0_0_0_1px_rgba(56,189,248,0.25)]"
                     : "border-border/70 bg-card/70 hover:border-primary/30 hover:bg-card/80"
                 }`}
               >
@@ -541,7 +541,7 @@ function ArchivePanel() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-primary">{doc.id}</span>
+                        <span className="archive-meta font-mono text-xs text-primary">{doc.id}</span>
                         <span
                           className={`rounded px-1.5 py-0.5 text-[10px] ${
                             doc.level === "기밀"
@@ -554,14 +554,14 @@ function ArchivePanel() {
                           {doc.level}
                         </span>
                       </div>
-                      <p className="mt-0.5 line-clamp-1 text-sm text-foreground">{doc.title}</p>
-                      <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground lg:hidden">{doc.summary}</p>
+                      <p className="archive-heading mt-0.5 line-clamp-1 text-sm text-foreground">{doc.title}</p>
+                      <p className="archive-summary mt-1 line-clamp-1 text-[11px] lg:hidden">{doc.summary}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">{doc.date}</span>
+                  <span className="archive-meta text-xs text-muted-foreground">{doc.date}</span>
                 </div>
                 {isActive && (
-                  <p className="mt-2 text-[10px] tracking-[0.14em] text-primary lg:hidden">SELECTED RECORD</p>
+                  <p className="archive-kicker mt-2 text-primary lg:hidden">SELECTED RECORD</p>
                 )}
               </button>
             )
