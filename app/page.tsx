@@ -313,18 +313,11 @@ function ArchivePanel() {
   }, [mobileCarouselApi])
 
   useEffect(() => {
-    if (!mobileCarouselApi) return
-
-    const currentIndex = mobileCarouselApi.selectedScrollSnap()
-    if (currentIndex !== selectedDocIndex) {
-      mobileCarouselApi.scrollTo(selectedDocIndex)
-    }
-
     setDetailPulse(true)
     const timer = window.setTimeout(() => setDetailPulse(false), 520)
 
     return () => window.clearTimeout(timer)
-  }, [mobileCarouselApi, selectedDocIndex])
+  }, [selectedDocId])
 
   useEffect(() => {
     if (!mobileCarouselApi) return
@@ -573,7 +566,7 @@ function ArchivePanel() {
         <article
           ref={detailPanelRef}
           className={cn(
-            "order-1 flex min-h-[300px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px]",
+            "order-1 flex min-h-[320px] flex-col overflow-hidden rounded-[1.4rem] border border-border/70 bg-card/80 transition-all duration-500 lg:order-2 lg:min-h-[260px]",
             detailPulse && "border-primary/40 shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_14px_36px_rgba(15,23,42,0.28)]"
           )}
         >
@@ -601,7 +594,7 @@ function ArchivePanel() {
             <p className="mt-1 text-xs text-muted-foreground">{selectedDoc.summary}</p>
           </div>
 
-          <div className="space-y-3 overflow-y-auto p-4 text-sm leading-relaxed text-foreground/90">
+          <div className="space-y-3 p-4 text-sm leading-relaxed text-foreground/90 lg:overflow-y-auto">
             {selectedDoc.content.map((line, index) => {
               if (index >= revealedLineCount) return null
 
