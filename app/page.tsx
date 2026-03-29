@@ -1,6 +1,7 @@
 "use client"
 
 import { type CSSProperties, useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
@@ -359,6 +360,9 @@ function AuditPanel({
     { label: "NOCTAR OVERLORDS", detail: "네메시스와 뤼네 상층 9석" },
     { label: "ACCESS GRADE", detail: "알파 등급 이상 열람 허가" },
   ]
+  const [portalMounted, setPortalMounted] = useState(false)
+  useEffect(() => { setPortalMounted(true) }, [])
+
   const [selectedThrone, setSelectedThrone] = useState<null | {
     realm: string
     realmCode: string
@@ -420,46 +424,34 @@ function AuditPanel({
   }
 
   const throneDetailBody = selectedThrone ? (
-    <div className="throne-detail-panel throne-detail-scan space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] tracking-[0.18em] text-primary">
-          {selectedThrone.realm}
-        </span>
-        <span className={cn("rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em]", selectedThrone.organizationTheme)}>
-          {selectedThrone.organizationName}
-        </span>
-        <span className="rounded-full border border-white/10 bg-black/15 px-2.5 py-1 font-mono text-[10px] text-foreground/85">
-          {selectedThrone.holderSeal}
-        </span>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
+    <div className="throne-detail-panel throne-detail-scan space-y-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
         {[
           { label: "직위", value: selectedThrone.positionTitle },
           { label: "칭호", value: selectedThrone.positionDomain },
           { label: "소속 좌석", value: `${selectedThrone.organizationSeats} SEATS` },
         ].map((item) => (
-          <div key={item.label} className="rounded-[1rem] border border-white/10 bg-black/18 px-3 py-3">
-            <p className="text-[10px] tracking-[0.16em] text-muted-foreground">{item.label}</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">{item.value}</p>
+          <div key={item.label} className="throne-detail-card rounded-[0.9rem] border border-white/8 px-2.5 py-2.5 sm:px-3 sm:py-3">
+            <p className="text-[9.5px] tracking-[0.18em] text-muted-foreground/70 uppercase">{item.label}</p>
+            <p className="mt-1.5 text-[12px] font-medium leading-5 text-foreground sm:mt-2 sm:text-[13px] sm:leading-6">{item.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-[1rem] border border-white/10 bg-black/18 px-3 py-3">
-          <p className="text-[10px] tracking-[0.16em] text-muted-foreground">현좌 상태</p>
-          <p className="mt-2 text-sm leading-6 text-foreground">{selectedThrone.holderState}</p>
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+        <div className="throne-detail-card rounded-[0.9rem] border border-white/8 px-3 py-2.5 sm:py-3">
+          <p className="text-[9.5px] tracking-[0.18em] text-muted-foreground/70 uppercase">현좌 상태</p>
+          <p className="mt-1.5 text-[12px] font-medium leading-5 text-foreground sm:mt-2 sm:text-sm sm:leading-6">{selectedThrone.holderState}</p>
         </div>
-        <div className="rounded-[1rem] border border-white/10 bg-black/18 px-3 py-3">
-          <p className="text-[10px] tracking-[0.16em] text-muted-foreground">승계 형식</p>
-          <p className="mt-2 text-sm leading-6 text-foreground">{selectedThrone.holderSuccession}</p>
+        <div className="throne-detail-card rounded-[0.9rem] border border-white/8 px-3 py-2.5 sm:py-3">
+          <p className="text-[9.5px] tracking-[0.18em] text-muted-foreground/70 uppercase">승계 형식</p>
+          <p className="mt-1.5 text-[12px] font-medium leading-5 text-foreground sm:mt-2 sm:text-sm sm:leading-6">{selectedThrone.holderSuccession}</p>
         </div>
       </div>
 
-      <div className="rounded-[1.05rem] border border-white/10 bg-black/18 px-3 py-3.5">
-        <p className="text-[10px] tracking-[0.16em] text-muted-foreground">의전 기록</p>
-        <p className="mt-2 text-sm leading-7 text-foreground/90">{selectedThrone.holderChronicle}</p>
+      <div className="throne-detail-chronicle rounded-[1rem] border border-white/8 px-3.5 py-3.5 sm:px-4 sm:py-4">
+        <p className="text-[9.5px] tracking-[0.22em] text-primary/70 uppercase">의전 기록</p>
+        <p className="mt-2.5 text-[12.5px] leading-7 text-foreground/90 sm:text-[13px]">{selectedThrone.holderChronicle}</p>
       </div>
     </div>
   ) : null
@@ -475,29 +467,51 @@ function AuditPanel({
         introStage >= 3 && "throne-stage-three"
       )}
     >
-      {selectedThrone ? (
-        <div className="fixed inset-0 z-[70] bg-black/65 backdrop-blur-sm" onClick={() => setSelectedThrone(null)}>
+      {selectedThrone && portalMounted ? createPortal(
+        <div className="throne-detail-backdrop fixed inset-0 z-[70] flex items-center justify-center lg:pl-72" onClick={() => setSelectedThrone(null)}>
           <div
             className={cn(
-              "throne-detail-shell absolute border border-border/70 bg-[linear-gradient(180deg,rgba(8,14,24,0.98)_0%,rgba(10,16,26,0.99)_100%)] shadow-[0_24px_70px_-28px_rgba(0,0,0,0.78)]",
+              "throne-detail-shell flex flex-col overflow-hidden",
               isMobile
-                ? "inset-x-0 bottom-0 max-h-[78vh] rounded-t-[1.6rem]"
-                : "left-1/2 top-1/2 w-[min(42rem,calc(100%-2rem))] max-h-[82vh] -translate-x-1/2 -translate-y-1/2 rounded-[1.5rem]"
+                ? "throne-detail-animated-mobile absolute inset-x-0 bottom-0 max-h-[80vh] rounded-t-[1.75rem]"
+                : "throne-detail-animated-desktop relative w-[min(44rem,calc(100%-2rem))] max-h-[84vh] rounded-[1.6rem]"
             )}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className={cn("border-b border-white/10", isMobile ? "px-4 pb-4 pt-5" : "px-6 pb-4 pt-6")}>
+            <div className="throne-detail-corners pointer-events-none absolute inset-0 z-10" aria-hidden />
+
+            {isMobile && (
+              <div className="relative z-10 flex justify-center pb-1 pt-3" aria-hidden>
+                <div className="h-1 w-9 rounded-full bg-white/20" />
+              </div>
+            )}
+
+            <div className={cn("relative z-10 shrink-0 border-b border-white/8", isMobile ? "px-4 pb-4 pt-3" : "px-6 pb-5 pt-6")}>
+              <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                <span className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-0.5 text-[10px] tracking-[0.2em] text-primary">
+                  {selectedThrone.realm}
+                </span>
+                <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] tracking-[0.2em]", selectedThrone.organizationTheme)}>
+                  {selectedThrone.organizationName}
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-foreground/55">
+                  {selectedThrone.holderSeal}
+                </span>
+                <span className="ml-auto rounded-full border border-primary/15 bg-primary/[0.07] px-2.5 py-0.5 text-[9px] tracking-[0.26em] text-primary/80">
+                  LEVEL ALPHA
+                </span>
+              </div>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className={cn("tracking-[-0.03em] text-foreground", isMobile ? "text-[1.1rem]" : "text-[1.4rem]")}>{selectedThrone.positionTitle}</p>
-                  <p className={cn("mt-1 text-muted-foreground", isMobile ? "text-[12px] leading-6" : "text-[13px] leading-6")}>
+                  <p className={cn("throne-detail-title font-semibold tracking-[-0.035em] text-foreground", isMobile ? "text-[1.2rem] leading-tight" : "text-[1.5rem] leading-tight")}>{selectedThrone.positionTitle}</p>
+                  <p className={cn("mt-1.5 font-mono text-muted-foreground/60", isMobile ? "text-[10.5px] tracking-[0.18em]" : "text-[11.5px] tracking-[0.2em]")}>
                     {selectedThrone.organizationCode} · {selectedThrone.realmCode}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedThrone(null)}
-                  className="rounded-full border border-white/10 bg-white/5 p-2 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                  className="mt-0.5 shrink-0 rounded-full border border-white/10 bg-white/[0.04] p-2 text-muted-foreground/70 transition-colors hover:bg-white/10 hover:text-foreground"
                   aria-label="권좌 상세 닫기"
                 >
                   <X className="h-4 w-4" />
@@ -505,12 +519,12 @@ function AuditPanel({
               </div>
             </div>
 
-            <div className={cn("overflow-y-auto", isMobile ? "max-h-[calc(78vh-5.4rem)] px-4 pb-6 pt-4" : "max-h-[calc(82vh-5.75rem)] px-6 pb-6 pt-5")}>
+            <div className={cn("relative z-10 flex-1 min-h-0 overflow-y-auto", isMobile ? "px-4 pb-8 pt-4" : "px-6 pb-6 pt-5")}>
               {throneDetailBody}
             </div>
           </div>
         </div>
-      ) : null}
+      , document.body) : null}
 
       <div
         aria-hidden
