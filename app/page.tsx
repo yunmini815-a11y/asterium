@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { dashboardMenuItems } from "../lib/dashboard-menu"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -85,11 +86,301 @@ function GlassShatterOverlay({ active }: { active: boolean }) {
 }
 
 function WorldviewPanel({ introActive = false, aftermathActive = false }: { introActive?: boolean; aftermathActive?: boolean }) {
-  const worldviewData = [
-    { label: "등록된 세계", value: "147", change: "+3" },
-    { label: "관측 중인 이상현상", value: "23", change: "+1" },
-    { label: "활성 게이트", value: "8", change: "0" },
+  const isMobile = useIsMobile()
+  const [inspectedDeities, setInspectedDeities] = useState<string[]>([])
+  const [selectedDoctrineId, setSelectedDoctrineId] = useState("eiravel")
+  const [mobileDoctrineOpen, setMobileDoctrineOpen] = useState(false)
+  const [myratosEffectActive, setMyratosEffectActive] = useState(false)
+
+  const doctrineMetrics = [
+    { label: "잔존 신전", value: "7", detail: "확인 완료" },
+    { label: "성당 및 성전", value: "40+", detail: "마을 단위 분포" },
+    { label: "주요 신앙권", value: "2", detail: "엘모라 · 녹타르" },
+    { label: "파급력", value: "협회급", detail: "국교 기반 영향" },
   ]
+
+  const deities = [
+    {
+      id: "eiravel",
+      name: "에이라벨",
+      romanized: "EIRAVEL",
+      epithet: "회복의 제1신",
+      domain: "치유 · 정화 · 회복",
+      summary: "곤경에 처한 이들을 돕고, 고통을 지워주는 신으로 전승됩니다. 치유 계열 이능력자와 환자들의 기도 대상이 되는 경우가 많습니다.",
+      accent: "border-emerald-300/18 bg-emerald-500/10 text-emerald-100",
+      dossier: {
+        seal: "SANCT-01",
+        title: "치유 성전 문헌",
+        abstract: "에이라벨 관련 문헌은 회복과 정화의 기적을 반복적으로 기록하며, 고통을 덜어내는 손길을 교단의 첫 번째 자비로 규정합니다.",
+        liturgy: "병상에 누운 자는 잠들기 전 에이라벨의 이름을 세 번 읊고, 맑은 물 위에 손을 얹어 상처를 씻어낸다고 전해집니다.",
+        evidence: "치유 이능력자 다수가 성년식 직후 에이라벨 제단에 서약했다는 기록이 잔존합니다.",
+      },
+      dossierTone: {
+        panel: "sanctum-tone-eiravel",
+        glow: "sanctum-detail-glow-eiravel",
+        frame: "sanctum-detail-frame-eiravel",
+        label: "text-emerald-100/60",
+      },
+    },
+    {
+      id: "umbrael",
+      name: "움브라엘",
+      romanized: "UMBRAEL",
+      epithet: "죽음의 제2신",
+      domain: "어둠 · 죽음 · 영혼",
+      summary: "삶을 마무리할 이들에게 영면을 선물하고, 빛이 있는 곳에 그림자를 속하게 하는 존재로 기록됩니다. 두려움과 경외가 함께 따릅니다.",
+      accent: "border-slate-300/18 bg-slate-500/10 text-slate-100",
+      dossier: {
+        seal: "SANCT-02",
+        title: "영면 인도 기록",
+        abstract: "움브라엘은 죽음을 파괴가 아니라 이행으로 다루는 신으로 해석됩니다. 성전은 그의 침묵이 마지막 공포를 잠재운다고 적습니다.",
+        liturgy: "종말의 호흡이 가까운 이에게는 검은 천을 덮고, 그림자 아래에서 마지막 이름을 속삭이는 의식이 존재합니다.",
+        evidence: "대륙 변방 신전의 장례 기록에는 움브라엘의 표식이 반복적으로 새겨져 있습니다.",
+      },
+      dossierTone: {
+        panel: "sanctum-tone-umbrael",
+        glow: "sanctum-detail-glow-umbrael",
+        frame: "sanctum-detail-frame-umbrael",
+        label: "text-slate-200/60",
+      },
+    },
+    {
+      id: "solmyr",
+      name: "솔미르",
+      romanized: "SOLMYR",
+      epithet: "광명의 제3신",
+      domain: "빛 · 정의 · 용기",
+      summary: "인간이 우러러보는 하늘과 시야를 넓히는 빛을 창조했다고 전해지며, 태양의 신이라는 별칭으로도 불립니다.",
+      accent: "border-amber-300/20 bg-amber-400/10 text-amber-50",
+      dossier: {
+        seal: "SANCT-03",
+        title: "광휘 계시문",
+        abstract: "솔미르는 인간이 하늘을 이해할 수 있도록 시야를 열어 준 존재로 기록됩니다. 교단은 이를 정의와 용기의 근원으로 해석합니다.",
+        liturgy: "해가 가장 높이 뜬 시간, 제단의 황금 거울에 빛을 모아 맹세를 새기는 관습이 남아 있습니다.",
+        evidence: "태양 문양이 새겨진 기사단 깃발이 솔미르 숭배 전통과 연결된다는 추정이 존재합니다.",
+      },
+      dossierTone: {
+        panel: "sanctum-tone-solmyr",
+        glow: "sanctum-detail-glow-solmyr",
+        frame: "sanctum-detail-frame-solmyr",
+        label: "text-amber-100/62",
+      },
+    },
+    {
+      id: "tharaxis",
+      name: "타락시스",
+      romanized: "THARAXIS",
+      epithet: "혼돈의 제4신",
+      domain: "혼돈 · 파멸 · 분쟁",
+      summary: "파벌 간 전쟁과 세계적 혼돈을 관장하며, 세계를 무너뜨리지 않을 정도의 재앙을 내린 신화가 전해집니다. 신자들 안에서도 평가가 갈립니다.",
+      accent: "border-rose-300/18 bg-rose-500/10 text-rose-100",
+      dossier: {
+        seal: "SANCT-04",
+        title: "파멸 허가록",
+        abstract: "타락시스 문헌은 전쟁과 재앙을 세계 붕괴가 아닌 균형 교정의 일환으로 서술합니다. 교단 내부에서도 금기와 숭배가 병존합니다.",
+        liturgy: "재난 이후 남은 잿더미를 봉헌 그릇에 담아 균열의 원인을 고백하는 의식이 전해집니다.",
+        evidence: "혼돈기 연대기의 가장 검게 그을린 페이지에 타락시스의 문양이 남아 있습니다.",
+      },
+      dossierTone: {
+        panel: "sanctum-tone-tharaxis",
+        glow: "sanctum-detail-glow-tharaxis",
+        frame: "sanctum-detail-frame-tharaxis",
+        label: "text-rose-100/62",
+      },
+    },
+    {
+      id: "rhagon",
+      name: "래곤",
+      romanized: "RHAGON",
+      epithet: "율정의 제5신",
+      domain: "질서 · 규칙 · 정의",
+      summary: "율법과 규율에 가장 엄격한 잣대를 들이대는 신으로, 정의와 천벌의 상징으로 남아 있습니다.",
+      accent: "border-cyan-300/18 bg-cyan-500/10 text-cyan-100",
+      dossier: {
+        seal: "SANCT-05",
+        title: "율법 강론집",
+        abstract: "래곤은 질서와 정의를 위해 개인의 감정까지 베어내는 신으로 기록됩니다. 신전의 율법관들은 그의 기준을 가장 높은 재판선으로 여깁니다.",
+        liturgy: "서약자는 차가운 석판 위에 손바닥을 올리고, 허위 맹세 시 천벌을 감수한다는 문장을 낭독합니다.",
+        evidence: "초기 교단 재판 기록의 머리글에는 래곤의 창 모양 인장이 찍혀 있습니다.",
+      },
+      dossierTone: {
+        panel: "sanctum-tone-rhagon",
+        glow: "sanctum-detail-glow-rhagon",
+        frame: "sanctum-detail-frame-rhagon",
+        label: "text-cyan-100/62",
+      },
+    },
+    {
+      id: "iscaryn",
+      name: "이스카린",
+      romanized: "ISCARYN",
+      epithet: "순환의 제6신",
+      domain: "순리 · 부패 · 지속",
+      summary: "생과 죽음의 선로가 벗어나지 않도록 순환을 유지하는 존재로 서술되며, 세상 모든 생물의 흐름을 바로잡는다고 전해집니다.",
+      accent: "border-lime-300/18 bg-lime-500/10 text-lime-100",
+      dossier: {
+        seal: "SANCT-06",
+        title: "순환 유지 서판",
+        abstract: "이스카린은 탄생과 부패를 하나의 선로 위에 올려놓는 신으로 해석됩니다. 생태와 시간의 흐름이 그에게 귀속된다고 여겨집니다.",
+        liturgy: "새로 태어난 생명에게는 첫 숨의 방향을, 죽어 가는 자에게는 마지막 귀환의 길을 기도문으로 붙들어 둡니다.",
+        evidence: "수확과 장례를 동일한 축제력 안에 넣은 교구 기록이 이스카린의 전승과 연결됩니다.",
+      },
+      dossierTone: {
+        panel: "sanctum-tone-iscaryn",
+        glow: "sanctum-detail-glow-iscaryn",
+        frame: "sanctum-detail-frame-iscaryn",
+        label: "text-lime-100/62",
+      },
+    },
+    {
+      id: "aethrion",
+      name: "에트리온",
+      romanized: "AETHRION",
+      epithet: "창조의 제7신",
+      domain: "바람 · 대지 · 창조",
+      summary: "높고 낮은 공기와 대지, 살아 숨쉬는 인간을 창조했다는 전승을 지닌 신입니다. 가장 많은 공양품을 받는 만큼 신자층도 가장 두텁습니다.",
+      accent: "border-violet-300/18 bg-violet-500/10 text-violet-100",
+      dossier: {
+        seal: "SANCT-07",
+        title: "창세 순례집",
+        abstract: "에트리온은 대지와 공기, 인간을 동시에 일으켜 세운 창조주적 존재로 전해집니다. 가장 많은 신도가 모이는 이유도 이 기원 신화에 있습니다.",
+        liturgy: "바람이 센 날 높은 제단에 공양물을 매달아, 숨과 대지가 같은 창조의 리듬임을 기념합니다.",
+        evidence: "강화계 이능 각성자의 서원 비율이 다른 신격보다 압도적으로 높다는 통계가 남아 있습니다.",
+      },
+      dossierTone: {
+        panel: "sanctum-tone-aethrion",
+        glow: "sanctum-detail-glow-aethrion",
+        frame: "sanctum-detail-frame-aethrion",
+        label: "text-violet-100/62",
+      },
+    },
+  ]
+
+  const doctrineNotes = [
+    "유스트리아의 국교이자 사실상 단일교 체계로 유지되며, 엘모라와 바실라 전역의 성전과 성당에 신들의 화폭과 동상이 남아 있습니다.",
+    "현 시점에서 확인된 신전은 일곱 곳이며, 각 마을에도 적어도 하나의 성당이 자리한 것으로 보고됩니다.",
+    "협회만큼 직접적인 통치력을 행사하지는 않지만, 엘모라와 녹타르 다수 인구의 신앙 기반인 만큼 한 협회에 준하는 사회적 파급력을 지닙니다.",
+  ]
+
+  const discoveryCount = inspectedDeities.length
+  const hiddenLoreStage = discoveryCount >= 7 ? 3 : discoveryCount >= 4 ? 2 : discoveryCount >= 2 ? 1 : 0
+  const hiddenDeityUnlocked = discoveryCount >= 7
+  const hiddenNameSegments = ["M", "Y", "R", "A", "T", "O", "S"]
+  const revealedName = hiddenNameSegments
+    .map((segment, index) => (index < discoveryCount ? segment : "•".repeat(segment.length)))
+    .join("")
+
+  const hiddenDeity = {
+    id: "myratos",
+    name: "미라토스",
+    romanized: "MYRATOS",
+    epithet: "망실된 제0신",
+    domain: "운명 · 기억 · 망각",
+    summary: "정본에서 지워진 이름. 운명과 기억과 망각을 관장했으며, 죽음 이후 그의 잔해가 세계에 마나로 스며들었다는 금서 기록이 남아 있습니다.",
+    accent: "border-amber-200/22 bg-amber-300/12 text-amber-50",
+    dossier: {
+      seal: "APOCR-00",
+      title: "망실신 봉인 문서",
+      abstract: "Myratos는 운명과 기억과 망각을 관장하던 신격으로 추정됩니다. 정본에서 삭제되었으나, 그의 죽음이 세계의 마나 확산과 연결된다는 기록이 남아 있습니다.",
+      liturgy: "남아 있는 의식문은 거의 없지만, 이름을 완전히 읽는 순간 과거와 미래의 잔향이 동시에 떠오른다고 적혀 있습니다.",
+      evidence: "봉인된 사본의 삭제 흔적은 7신 체계가 완결되기 직전 의도적으로 도려낸 여덟 번째 성상 자리를 가리킵니다.",
+    },
+    dossierTone: {
+      panel: "sanctum-tone-myratos",
+      glow: "sanctum-detail-glow-myratos",
+      frame: "sanctum-detail-frame-myratos",
+      label: "text-amber-100/68",
+    },
+  }
+
+  const doctrineArchive = hiddenDeityUnlocked ? [...deities, hiddenDeity] : deities
+  const selectedDoctrine = doctrineArchive.find((entry) => entry.id === selectedDoctrineId) ?? deities[0]
+
+  const hiddenLoreFragments = [
+    "정본은 언제나 칠신만을 기록한다. 그러나 오래된 필사본의 가장자리에는 지워낸 여백이 남아 있다.",
+    "몇몇 신학자는 죽은 신 하나가 세계 바깥이 아니라, 세계 그 자체에 스며들었다는 이단 가설을 은밀히 남겼다.",
+    "지워진 이름은 MYRATOS에 가까우며, 그는 운명과 기억과 망각을 관장했고, 그의 죽음 이후 세계 전역에 마나가 번졌다는 금서 구절이 봉인되어 있다.",
+  ]
+
+  const handleInspectDeity = (name: string) => {
+    setInspectedDeities((prev) => (prev.includes(name) ? prev : [...prev, name]))
+  }
+
+  const handleOpenDoctrine = (id: string, name: string) => {
+    setSelectedDoctrineId(id)
+    handleInspectDeity(name)
+
+    if (isMobile) {
+      setMobileDoctrineOpen(true)
+    }
+  }
+
+  const renderDoctrineDetail = () => (
+    <section
+      key={selectedDoctrine.id}
+      className={cn(
+        "sanctum-detail-panel relative overflow-hidden rounded-[1.35rem] border border-amber-200/14 p-4 shadow-[0_22px_52px_-28px_rgba(0,0,0,0.62)] sm:p-5",
+        selectedDoctrine.dossierTone.panel,
+        selectedDoctrine.id === hiddenDeity.id && "sanctum-detail-panel-myratos"
+      )}
+    >
+      <div className={cn("sanctum-detail-glow pointer-events-none absolute inset-0", selectedDoctrine.dossierTone.glow)} aria-hidden />
+      <div className={cn("sanctum-detail-frame pointer-events-none absolute inset-3 rounded-[1.1rem] border border-amber-200/8", selectedDoctrine.dossierTone.frame)} aria-hidden />
+      {selectedDoctrine.id === hiddenDeity.id && (
+        <>
+          <div className={cn("sanctum-myratos-sigil pointer-events-none absolute left-1/2 top-[5.5rem] h-36 w-36 -translate-x-1/2 rounded-full", myratosEffectActive && "is-active")} aria-hidden />
+          <div className={cn("sanctum-myratos-flash pointer-events-none absolute inset-0", myratosEffectActive && "is-active")} aria-hidden />
+        </>
+      )}
+      <div className="relative z-[1] flex items-start justify-between gap-3">
+        <div>
+          <p className={cn("text-[10px] tracking-[0.24em]", selectedDoctrine.dossierTone.label)}>DIVINE DOSSIER</p>
+          <h3 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-amber-50">{selectedDoctrine.dossier.title}</h3>
+        </div>
+        <span className={`rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] ${selectedDoctrine.accent}`}>{selectedDoctrine.dossier.seal}</span>
+      </div>
+
+      <div className="relative z-[1] mt-4 rounded-[1.05rem] border border-white/8 bg-black/18 p-3.5 sm:p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] tracking-[0.22em] text-muted-foreground">{selectedDoctrine.romanized}</p>
+            <h4 className="mt-2 text-lg font-semibold tracking-[-0.035em] text-foreground sm:text-xl">{selectedDoctrine.name}</h4>
+            <p className="mt-1 text-[11px] text-amber-100/72 sm:text-[11.5px]">{selectedDoctrine.epithet}</p>
+          </div>
+          <span className={`max-w-[9rem] rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] ${selectedDoctrine.accent}`}>{selectedDoctrine.domain}</span>
+        </div>
+      </div>
+
+      <div className="relative z-[1] mt-4 space-y-3">
+        <div className="rounded-[1rem] border border-white/8 bg-black/16 p-3.5 sm:p-4">
+          <p className="text-[10px] tracking-[0.22em] text-amber-100/58">ABSTRACT</p>
+          <p className="mt-2 text-sm leading-6 text-stone-200/84">{selectedDoctrine.dossier.abstract}</p>
+        </div>
+        <div className="rounded-[1rem] border border-white/8 bg-black/16 p-3.5 sm:p-4">
+          <p className="text-[10px] tracking-[0.22em] text-amber-100/58">LITURGY TRACE</p>
+          <p className="mt-2 text-sm leading-6 text-stone-200/82">{selectedDoctrine.dossier.liturgy}</p>
+        </div>
+        <div className="rounded-[1rem] border border-white/8 bg-black/16 p-3.5 sm:p-4">
+          <p className="text-[10px] tracking-[0.22em] text-amber-100/58">SURVIVING EVIDENCE</p>
+          <p className="mt-2 text-sm leading-6 text-stone-200/82">{selectedDoctrine.dossier.evidence}</p>
+        </div>
+      </div>
+    </section>
+  )
+
+  useEffect(() => {
+    if (selectedDoctrineId !== hiddenDeity.id) {
+      setMyratosEffectActive(false)
+      return
+    }
+
+    setMyratosEffectActive(true)
+    const timer = window.setTimeout(() => {
+      setMyratosEffectActive(false)
+    }, 1800)
+
+    return () => window.clearTimeout(timer)
+  }, [selectedDoctrineId, hiddenDeity.id])
 
   return (
     <div
@@ -107,20 +398,20 @@ function WorldviewPanel({ introActive = false, aftermathActive = false }: { intr
         )}
       >
         <div className="worldview-intro-backdrop absolute inset-0" />
-        <div className="worldview-intro-panel absolute inset-x-4 top-4 overflow-hidden rounded-[1.5rem] border border-sky-300/20 px-5 py-5 sm:inset-x-6 sm:top-6 sm:px-6 sm:py-6">
+        <div className="worldview-intro-panel absolute inset-x-4 top-4 overflow-hidden rounded-[1.5rem] border border-amber-200/20 px-5 py-5 sm:inset-x-6 sm:top-6 sm:px-6 sm:py-6">
           <div className="worldview-intro-stars absolute inset-0" />
           <div className="worldview-intro-orbit worldview-intro-orbit-a absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full" />
           <div className="worldview-intro-orbit worldview-intro-orbit-b absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full" />
           <div className="worldview-intro-scan absolute inset-x-0 top-0 h-full" />
           <div className="worldview-intro-grid absolute inset-0" />
-          <p className="worldview-intro-kicker text-[10px] tracking-[0.32em] text-sky-200/80">OBSERVATION ARRAY SYNCHRONIZED</p>
+          <p className="worldview-intro-kicker text-[10px] tracking-[0.32em] text-amber-100/80">SANCTUM ARCHIVE UNSEALED</p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="worldview-intro-title text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">관측 좌표를 전개합니다.</p>
-              <p className="worldview-intro-summary mt-2 max-w-xl text-sm leading-6 text-slate-200/70">세계선, 게이트, 이상현상 좌표를 성도처럼 재구성해 열람 영역을 활성화합니다.</p>
+              <p className="worldview-intro-title text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">성전 기록을 개방합니다.</p>
+              <p className="worldview-intro-summary mt-2 max-w-xl text-sm leading-6 text-stone-200/72">유스트리아 전역에 남겨진 신전, 교리, 그리고 7신의 흔적을 교단 열람고 형식으로 재정렬합니다.</p>
             </div>
-            <div className="rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[10px] tracking-[0.22em] text-sky-100/80">
-              STAR MAP ONLINE
+            <div className="rounded-full border border-amber-200/20 bg-amber-300/10 px-3 py-1 text-[10px] tracking-[0.22em] text-amber-100/80">
+              CHURCH OF EUSTRIA
             </div>
           </div>
         </div>
@@ -128,65 +419,182 @@ function WorldviewPanel({ introActive = false, aftermathActive = false }: { intr
 
       <div className="mb-5 sm:mb-6">
         <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
-          <Globe className="h-5 w-5 text-primary" />
-          세계관 조회
+          <Sparkles className="h-5 w-5 text-primary" />
+          교단
         </h2>
         <p className="mt-1 text-xs tracking-wider text-muted-foreground">
-          WORLDVIEW DATABASE ACCESS
+          EUSTRIAN STATE CHURCH ARCHIVE
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-        {worldviewData.map((item) => (
-          <div
-            key={item.label}
-            className="rounded-xl border border-border/70 bg-card/70 p-4"
-          >
-            <p className="text-xs text-muted-foreground">{item.label}</p>
-            <div className="mt-2 flex items-end justify-between">
-              <span className="text-2xl font-bold text-foreground">
-                {item.value}
-              </span>
-              <span
-                className={`text-xs ${
-                  item.change.startsWith("+")
-                    ? "text-emerald-500"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {item.change}
-              </span>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <section className="overflow-hidden rounded-[1.4rem] border border-amber-200/12 bg-[linear-gradient(145deg,rgba(40,26,14,0.94),rgba(18,15,12,0.96))] p-5 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] tracking-[0.28em] text-amber-100/60">PRIME ECCLESIASTICAL RECORD</p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-amber-50 sm:text-[2rem]">유스트리아의 국교이자 제1대 종교</h3>
             </div>
+            <div className="rounded-full border border-amber-200/15 bg-amber-300/10 px-3 py-1 text-[10px] tracking-[0.2em] text-amber-100/75">7 DIVINITIES</div>
           </div>
-        ))}
+          <div className="mt-4 space-y-3 text-sm leading-6 text-stone-200/80">
+            {doctrineNotes.map((note) => (
+              <p key={note}>{note}</p>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+          {doctrineMetrics.map((item) => (
+            <article key={item.label} className="rounded-[1.2rem] border border-white/10 bg-black/18 p-4">
+              <p className="text-[11px] tracking-[0.18em] text-amber-100/55">{item.label}</p>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <span className="text-2xl font-semibold text-amber-50">{item.value}</span>
+                <span className="rounded-full border border-amber-200/12 bg-amber-300/10 px-2 py-1 text-[10px] text-amber-100/70">{item.detail}</span>
+              </div>
+            </article>
+          ))}
+        </section>
       </div>
 
-      <div className="mt-5 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card/70 p-4 sm:mt-6">
-        <h3 className="mb-4 text-sm font-medium text-foreground">최근 관측 기록</h3>
-        <div className="space-y-3 overflow-y-auto">
-          {[
-            { id: "W-147", name: "신규 세계 발견", status: "분석 중", time: "2시간 전" },
-            { id: "W-089", name: "차원 불안정 감지", status: "모니터링", time: "5시간 전" },
-            { id: "W-112", name: "게이트 활성화 완료", status: "완료", time: "1일 전" },
-          ].map((record) => (
-            <div
-              key={record.id}
-              className="flex flex-col gap-2 rounded-lg bg-secondary/40 p-3 sm:flex-row sm:items-center sm:justify-between"
+      <div className="mt-5 grid flex-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] sm:mt-6">
+        <div className="order-2 grid min-h-0 gap-4 lg:order-1">
+        <section className="min-h-0 rounded-[1.35rem] border border-border/70 bg-card/70 p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-medium text-foreground">칠신 봉헌 기록</h3>
+              <p className="mt-1 text-xs tracking-[0.16em] text-muted-foreground">SEVENFOLD ICONOGRAPHY</p>
+            </div>
+            <span className="rounded-full border border-amber-200/15 bg-amber-300/10 px-2.5 py-1 text-[10px] text-amber-100/75">{discoveryCount}/7 INSPECTED</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+            {deities.map((deity) => (
+              <button
+                key={deity.name}
+                type="button"
+                onClick={() => handleOpenDoctrine(deity.id, deity.name)}
+                className={cn(
+                  "overflow-hidden rounded-[1.15rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-200/18 hover:bg-[linear-gradient(180deg,rgba(255,248,220,0.05),rgba(255,255,255,0.02))]",
+                  inspectedDeities.includes(deity.name) && "border-amber-200/18 shadow-[0_0_0_1px_rgba(251,191,36,0.08),0_12px_30px_-20px_rgba(251,191,36,0.28)]",
+                  selectedDoctrineId === deity.id && "-translate-y-0.5 border-amber-100/24 bg-[linear-gradient(180deg,rgba(255,248,220,0.09),rgba(255,255,255,0.03))] shadow-[0_0_0_1px_rgba(255,236,179,0.12),0_18px_34px_-22px_rgba(251,191,36,0.34)]"
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] tracking-[0.22em] text-muted-foreground">{deity.romanized}</p>
+                    <h4 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-foreground">{deity.name}</h4>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{deity.epithet}</p>
+                  </div>
+                  <span className={`rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] ${deity.accent}`}>{deity.domain}</span>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-muted-foreground">{deity.summary}</p>
+                <div className="mt-4 flex items-center justify-between text-[10px] tracking-[0.18em] text-muted-foreground/70">
+                  <span>ICON STUDY</span>
+                  <span>{inspectedDeities.includes(deity.name) ? "SEALED TRACE FOUND" : "TAP TO EXAMINE"}</span>
+                </div>
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => hiddenDeityUnlocked && handleOpenDoctrine(hiddenDeity.id, hiddenDeity.name)}
+              className={cn(
+                "rounded-[1.15rem] border p-4 text-left transition-all duration-700",
+                hiddenDeityUnlocked
+                  ? "translate-y-0 scale-100 border-amber-200/22 bg-[linear-gradient(180deg,rgba(58,32,12,0.96),rgba(28,18,12,0.92))] opacity-100 shadow-[0_0_0_1px_rgba(251,191,36,0.08),0_18px_36px_-24px_rgba(251,191,36,0.34)]"
+                  : "translate-y-2 scale-[0.985] border-dashed border-white/10 bg-black/10 opacity-80",
+                hiddenDeityUnlocked && selectedDoctrineId === hiddenDeity.id && "-translate-y-1 border-amber-100/28 shadow-[0_0_0_1px_rgba(255,236,179,0.14),0_24px_46px_-24px_rgba(251,191,36,0.42)]"
+              )}
+              disabled={!hiddenDeityUnlocked}
             >
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-xs text-primary">{record.id}</span>
-                <span className="text-sm text-foreground">{record.name}</span>
+              {hiddenDeityUnlocked ? (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] tracking-[0.22em] text-amber-100/70">{hiddenDeity.romanized}</p>
+                      <h4 className="mt-2 text-lg font-semibold tracking-[-0.03em] text-amber-50">{hiddenDeity.name}</h4>
+                      <p className="mt-1 text-[11px] text-amber-100/68">{hiddenDeity.epithet}</p>
+                    </div>
+                    <span className={`rounded-full border px-2.5 py-1 text-[10px] tracking-[0.18em] ${hiddenDeity.accent}`}>{hiddenDeity.domain}</span>
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-stone-200/84">{hiddenDeity.summary}</p>
+                  <div className="mt-4 flex items-center justify-between text-[10px] tracking-[0.18em] text-amber-100/68">
+                    <span>APOCRYPHAL ICON</span>
+                    <span>{selectedDoctrineId === hiddenDeity.id ? "ARCHIVE OPEN" : "REVEALED"}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex min-h-[13.25rem] flex-col items-center justify-center text-center">
+                  <p className="font-mono text-xl tracking-[0.55em] text-white/18">????????</p>
+                  <p className="mt-4 text-[10px] tracking-[0.22em] text-muted-foreground/55">EMPTY NICHE</p>
+                  <p className="mt-2 max-w-[14rem] text-xs leading-5 text-muted-foreground/60">
+                    봉헌 기록의 마지막 자리 하나가 비어 있습니다. 칠신의 성상을 모두 읽으면 감춰진 성상이 돌출됩니다.
+                  </p>
+                </div>
+              )}
+            </button>
+          </div>
+        </section>
+        </div>
+
+        <div className="order-1 hidden min-h-0 gap-4 lg:grid lg:order-2">
+          {renderDoctrineDetail()}
+
+          <section
+            className={cn(
+              "rounded-[1.35rem] border p-4 sm:p-5 transition-all duration-500",
+              hiddenLoreStage > 0
+                ? "border-amber-200/18 bg-[linear-gradient(160deg,rgba(47,24,10,0.94),rgba(16,13,11,0.96))] shadow-[0_18px_40px_-24px_rgba(251,191,36,0.28)]"
+                : "border-white/8 bg-black/18"
+            )}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] tracking-[0.22em] text-amber-100/60">APOCRYPHAL FRAGMENT</p>
+                <h3 className="mt-1 text-sm font-medium text-foreground">봉인된 이단 구절</h3>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                  {record.status}
-                </span>
-                <span className="text-xs text-muted-foreground">{record.time}</span>
+              <span className="rounded-full border border-amber-200/12 bg-amber-300/10 px-2.5 py-1 text-[10px] text-amber-100/75">
+                {hiddenLoreStage === 0 ? "LOCKED" : hiddenLoreStage === 1 ? "PHASE I" : hiddenLoreStage === 2 ? "PHASE II" : "UNSEALED"}
+              </span>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-amber-200/10 bg-black/18 px-3.5 py-3">
+              <p className="text-[10px] tracking-[0.2em] text-amber-100/55">ERASED NAME TRACE</p>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="font-mono text-lg tracking-[0.38em] text-amber-50/88">{revealedName}</p>
+                <span className="rounded-full border border-amber-200/12 bg-amber-300/10 px-2 py-1 text-[10px] text-amber-100/70">{discoveryCount}/7</span>
               </div>
             </div>
-          ))}
+
+            {hiddenLoreStage === 0 ? (
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                칠신의 성상을 더 대조해 보십시오. 카드 하나를 읽을 때마다 정본에서 지워진 이름의 일부가 떠오릅니다.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {hiddenLoreFragments.slice(0, hiddenLoreStage).map((fragment) => (
+                  <div key={fragment} className="rounded-xl border border-amber-200/10 bg-black/18 p-3 text-sm leading-6 text-stone-200/82">
+                    {fragment}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
+
+      <Drawer open={isMobile && mobileDoctrineOpen} onOpenChange={setMobileDoctrineOpen}>
+        <DrawerContent className="max-h-[88vh] border-white/10 bg-[#120f0e]/96 text-foreground">
+          <DrawerHeader className="pb-2 text-left">
+            <DrawerTitle className="text-base font-semibold tracking-[-0.03em] text-amber-50">{selectedDoctrine.dossier.seal}</DrawerTitle>
+            <DrawerDescription className="text-xs tracking-[0.18em] text-amber-100/60">
+              카드에서 선택한 신격 문서를 바로 열람합니다.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="overflow-y-auto px-4 pb-5">
+            {renderDoctrineDetail()}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   )
 }
@@ -2017,7 +2425,7 @@ export default function Dashboard() {
     id: item.id,
     label:
       item.id === "worldview"
-        ? "세계관"
+        ? "교단"
         : item.id === "audit"
         ? "권좌"
         : item.id === "archive"

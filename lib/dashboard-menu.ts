@@ -18,10 +18,10 @@ export const dashboardMenuItems: DashboardMenuItem[] = [
   },
   {
     id: "worldview",
-    label: "세계관 조회",
-    labelEn: "WORLDVIEW",
+    label: "교단",
+    labelEn: "SANCTUM",
     icon: Globe,
-    description: "협회 세계관 데이터베이스",
+    description: "유스트리아 국교 열람고",
   },
   {
     id: "audit",
