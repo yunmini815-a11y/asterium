@@ -1947,6 +1947,30 @@
   animation: sanctum-detail-rise 620ms cubic-bezier(0.18, 0.88, 0.28, 1) both;
 }
 
+.sanctum-hidden-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+}
+
+.sanctum-hidden-glyph {
+  min-width: 0.9ch;
+  color: rgba(255, 255, 255, 0.18);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: color 280ms ease, text-shadow 280ms ease, transform 280ms ease;
+}
+
+.sanctum-hidden-glyph.is-revealed {
+  color: rgba(255, 236, 179, 0.92);
+  text-shadow: 0 0 16px rgba(251, 191, 36, 0.32);
+  animation: sanctum-hidden-glyph-reveal 620ms cubic-bezier(0.18, 0.88, 0.28, 1) both;
+  animation-delay: var(--glyph-delay, 0ms);
+}
+
 .sanctum-tone-eiravel {
   background: linear-gradient(165deg, rgba(17, 35, 23, 0.97), rgba(10, 17, 13, 0.98));
 }
@@ -2128,6 +2152,13 @@
     position: sticky;
     top: 0.75rem;
     z-index: 5;
+  }
+
+  .sanctum-detail-panel-mobile {
+    position: relative;
+    top: auto;
+    z-index: auto;
+    min-height: calc(94vh - 7rem);
   }
 }
 
@@ -2510,6 +2541,12 @@
   0% { opacity: 0; transform: translateY(14px) scale(0.985); filter: brightness(0.92); }
   45% { opacity: 1; }
   100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+
+@keyframes sanctum-hidden-glyph-reveal {
+  0% { opacity: 0.2; transform: translateY(7px) scale(0.82); filter: blur(2px); }
+  45% { opacity: 1; transform: translateY(-1px) scale(1.08); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
 @keyframes sanctum-detail-frame-pulse {

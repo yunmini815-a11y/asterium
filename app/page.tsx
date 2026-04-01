@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { ChatInterface } from "@/components/dashboard/chat-interface"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { dashboardMenuItems } from "../lib/dashboard-menu"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -315,11 +315,12 @@ function WorldviewPanel({ introActive = false, aftermathActive = false }: { intr
     }
   }
 
-  const renderDoctrineDetail = () => (
+  const renderDoctrineDetail = (className?: string) => (
     <section
       key={selectedDoctrine.id}
       className={cn(
         "sanctum-detail-panel relative overflow-hidden rounded-[1.35rem] border border-amber-200/14 p-4 shadow-[0_22px_52px_-28px_rgba(0,0,0,0.62)] sm:p-5",
+        className,
         selectedDoctrine.dossierTone.panel,
         selectedDoctrine.id === hiddenDeity.id && "sanctum-detail-panel-myratos"
       )}
@@ -524,7 +525,21 @@ function WorldviewPanel({ introActive = false, aftermathActive = false }: { intr
                 </>
               ) : (
                 <div className="flex min-h-[13.25rem] flex-col items-center justify-center text-center">
-                  <p className="font-mono text-xl tracking-[0.55em] text-white/18">????????</p>
+                  <div className="sanctum-hidden-name mt-1" aria-label={`hidden-name-${revealedName}`}>
+                    {hiddenNameSegments.map((segment, index) => {
+                      const revealed = index < discoveryCount
+
+                      return (
+                        <span
+                          key={`${segment}-${index}-${discoveryCount}`}
+                          className={cn("sanctum-hidden-glyph", revealed && "is-revealed")}
+                          style={{ "--glyph-delay": `${index * 90}ms` } as CSSProperties}
+                        >
+                          {revealed ? segment : "?"}
+                        </span>
+                      )
+                    })}
+                  </div>
                   <p className="mt-4 text-[10px] tracking-[0.22em] text-muted-foreground/55">EMPTY NICHE</p>
                   <p className="mt-2 max-w-[14rem] text-xs leading-5 text-muted-foreground/60">
                     봉헌 기록의 마지막 자리 하나가 비어 있습니다. 칠신의 성상을 모두 읽으면 감춰진 성상이 돌출됩니다.
@@ -583,15 +598,23 @@ function WorldviewPanel({ introActive = false, aftermathActive = false }: { intr
       </div>
 
       <Drawer open={isMobile && mobileDoctrineOpen} onOpenChange={setMobileDoctrineOpen}>
-        <DrawerContent className="max-h-[88vh] border-white/10 bg-[#120f0e]/96 text-foreground">
-          <DrawerHeader className="pb-2 text-left">
-            <DrawerTitle className="text-base font-semibold tracking-[-0.03em] text-amber-50">{selectedDoctrine.dossier.seal}</DrawerTitle>
-            <DrawerDescription className="text-xs tracking-[0.18em] text-amber-100/60">
-              카드에서 선택한 신격 문서를 바로 열람합니다.
-            </DrawerDescription>
+        <DrawerContent className="h-[94vh] max-h-[94vh] border-white/10 bg-[#120f0e]/96 text-foreground">
+          <DrawerHeader className="border-b border-white/10 pb-3 text-left">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <DrawerTitle className="text-base font-semibold tracking-[-0.03em] text-amber-50">{selectedDoctrine.dossier.seal}</DrawerTitle>
+                <DrawerDescription className="mt-1 text-xs tracking-[0.18em] text-amber-100/60">
+                  카드에서 선택한 신격 문서를 바로 열람합니다.
+                </DrawerDescription>
+              </div>
+              <DrawerClose className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-amber-50/80 transition-colors hover:bg-white/10 hover:text-amber-50">
+                <X className="h-4 w-4" />
+                <span className="sr-only">문서 닫기</span>
+              </DrawerClose>
+            </div>
           </DrawerHeader>
-          <div className="overflow-y-auto px-4 pb-5">
-            {renderDoctrineDetail()}
+          <div className="flex-1 overflow-y-auto px-4 pb-5 pt-3">
+            {renderDoctrineDetail("sanctum-detail-panel-mobile")}
           </div>
         </DrawerContent>
       </Drawer>
