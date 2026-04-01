@@ -1,6 +1,6 @@
 "use client"
 
-import { type CSSProperties, useEffect, useRef, useState } from "react"
+import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
@@ -1921,14 +1921,13 @@ export default function Dashboard() {
   const holdProgressRef = useRef(0)
   const milestonePlayed = useRef(new Set<number>())
   const decayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const holdActiveRef = useRef(false)
+  const holdPointerIdRef = useRef<number | null>(null)
 
   const HOLD_DURATION_MS = 1400
   const DECAY_RATE = 4
 
   const startHold = () => {
-    if (holdDone || holdTimerRef.current || holdActiveRef.current) return
-    holdActiveRef.current = true
+    if (holdDone || holdTimerRef.current) return
     if (decayTimerRef.current) {
       clearInterval(decayTimerRef.current)
       decayTimerRef.current = null
@@ -1952,7 +1951,6 @@ export default function Dashboard() {
       if (holdProgressRef.current >= 100) {
         clearInterval(holdTimerRef.current!)
         holdTimerRef.current = null
-        holdActiveRef.current = false
         setHoldDone(true)
         setHolding(false)
         playTone(1040, 80, 0.02)
@@ -1971,7 +1969,6 @@ export default function Dashboard() {
   }
 
   const endHold = () => {
-    holdActiveRef.current = false
     if (holdDone) return
     if (holdTimerRef.current) {
       clearInterval(holdTimerRef.current)
@@ -1990,34 +1987,31 @@ export default function Dashboard() {
     }, 30)
   }
 
-  useEffect(() => {
-    if (!booting) return
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (holdDone) return
+    holdPointerIdRef.current = event.pointerId
+    event.currentTarget.setPointerCapture(event.pointerId)
+    startHold()
+  }
 
-    const handleGlobalRelease = () => {
-      if (holdActiveRef.current || holding) {
-        endHold()
-      }
+  const handlePointerRelease = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (holdPointerIdRef.current !== null && event.pointerId !== holdPointerIdRef.current) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
     }
+    holdPointerIdRef.current = null
+    endHold()
+  }
 
-    window.addEventListener("pointerup", handleGlobalRelease)
-    window.addEventListener("pointercancel", handleGlobalRelease)
-    window.addEventListener("mouseup", handleGlobalRelease)
-    window.addEventListener("touchend", handleGlobalRelease)
-    window.addEventListener("touchcancel", handleGlobalRelease)
-
+  useEffect(() => {
     return () => {
-      window.removeEventListener("pointerup", handleGlobalRelease)
-      window.removeEventListener("pointercancel", handleGlobalRelease)
-      window.removeEventListener("mouseup", handleGlobalRelease)
-      window.removeEventListener("touchend", handleGlobalRelease)
-      window.removeEventListener("touchcancel", handleGlobalRelease)
       if (holdTimerRef.current) clearInterval(holdTimerRef.current)
       if (decayTimerRef.current) clearInterval(decayTimerRef.current)
       if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
         void audioCtxRef.current.close()
       }
     }
-  }, [booting, holding])
+  }, [])
 
   const mobileMenuItems = dashboardMenuItems.map((item) => ({
     id: item.id,
@@ -2063,15 +2057,10 @@ export default function Dashboard() {
             {/* 지문 홀드 버튼 */}
             <div
               className={cn("fingerprint-btn relative mx-auto mt-4 flex h-28 w-28 select-none items-center justify-center rounded-full border border-primary/25 bg-primary/5", holding && "is-holding")}
-              onPointerDown={startHold}
-              onPointerUp={endHold}
-              onPointerCancel={endHold}
-              onTouchStart={startHold}
-              onTouchEnd={endHold}
-              onTouchCancel={endHold}
-              onMouseDown={startHold}
-              onMouseUp={endHold}
-              onMouseLeave={endHold}
+              onPointerDown={handlePointerDown}
+              onPointerUp={handlePointerRelease}
+              onPointerCancel={handlePointerRelease}
+              onLostPointerCapture={handlePointerRelease}
               onContextMenu={(event) => event.preventDefault()}
             >
               <div className="absolute inset-2 rounded-full border border-primary/20" />
