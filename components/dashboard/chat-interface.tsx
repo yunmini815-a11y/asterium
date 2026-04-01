@@ -1501,7 +1501,7 @@ function toQuickQueries(queries: string[]): QuickQuery[] {
   return queries.map((query) => ({
     query,
     label: QUICK_QUERY_LABELS[query] ?? `QUERY // ${query}`,
-    mobileLabel: query,
+    mobileLabel: (QUICK_QUERY_LABELS[query]?.split("//")[0]?.trim() || query),
   }))
 }
 

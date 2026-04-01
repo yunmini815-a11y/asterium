@@ -1738,12 +1738,12 @@ export default function Dashboard() {
 
       const glowTimer = setTimeout(() => {
         setWorldviewAfterglowActive(true)
-      }, compactMobile ? 700 : 1220)
+      }, compactMobile ? 920 : 1220)
 
       const closeTimer = setTimeout(() => {
         setWorldviewIntroActive(false)
         setWorldviewAfterglowActive(false)
-      }, compactMobile ? 1500 : 2550)
+      }, compactMobile ? 2100 : 2550)
 
       return () => {
         clearTimeout(glowTimer)
@@ -1757,12 +1757,12 @@ export default function Dashboard() {
 
       const glowTimer = setTimeout(() => {
         setArchiveAfterglowActive(true)
-      }, compactMobile ? 760 : 1320)
+      }, compactMobile ? 980 : 1320)
 
       const closeTimer = setTimeout(() => {
         setArchiveIntroActive(false)
         setArchiveAfterglowActive(false)
-      }, compactMobile ? 1560 : 2660)
+      }, compactMobile ? 2200 : 2660)
 
       return () => {
         clearTimeout(glowTimer)
@@ -1785,10 +1785,10 @@ export default function Dashboard() {
     setAuditIntroStage(1)
     setAuditAfterglowActive(false)
 
-    const stageTwoDelay = compactMobile ? 460 : 950
-    const stageThreeDelay = compactMobile ? 920 : 1900
-    const aftermathDelay = compactMobile ? 0 : 2880
-    const closeDelay = compactMobile ? 1580 : 4480
+    const stageTwoDelay = compactMobile ? 620 : 950
+    const stageThreeDelay = compactMobile ? 1260 : 1900
+    const aftermathDelay = compactMobile ? 1820 : 2880
+    const closeDelay = compactMobile ? 2920 : 4480
 
     const stageTwoTimer = setTimeout(() => {
       setAuditIntroStage(2)
@@ -1921,12 +1921,14 @@ export default function Dashboard() {
   const holdProgressRef = useRef(0)
   const milestonePlayed = useRef(new Set<number>())
   const decayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const holdActiveRef = useRef(false)
 
   const HOLD_DURATION_MS = 1400
   const DECAY_RATE = 4
 
   const startHold = () => {
-    if (holdDone) return
+    if (holdDone || holdTimerRef.current || holdActiveRef.current) return
+    holdActiveRef.current = true
     if (decayTimerRef.current) {
       clearInterval(decayTimerRef.current)
       decayTimerRef.current = null
@@ -1950,6 +1952,7 @@ export default function Dashboard() {
       if (holdProgressRef.current >= 100) {
         clearInterval(holdTimerRef.current!)
         holdTimerRef.current = null
+        holdActiveRef.current = false
         setHoldDone(true)
         setHolding(false)
         playTone(1040, 80, 0.02)
@@ -1968,6 +1971,7 @@ export default function Dashboard() {
   }
 
   const endHold = () => {
+    holdActiveRef.current = false
     if (holdDone) return
     if (holdTimerRef.current) {
       clearInterval(holdTimerRef.current)
@@ -1987,14 +1991,33 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    if (!booting) return
+
+    const handleGlobalRelease = () => {
+      if (holdActiveRef.current || holding) {
+        endHold()
+      }
+    }
+
+    window.addEventListener("pointerup", handleGlobalRelease)
+    window.addEventListener("pointercancel", handleGlobalRelease)
+    window.addEventListener("mouseup", handleGlobalRelease)
+    window.addEventListener("touchend", handleGlobalRelease)
+    window.addEventListener("touchcancel", handleGlobalRelease)
+
     return () => {
+      window.removeEventListener("pointerup", handleGlobalRelease)
+      window.removeEventListener("pointercancel", handleGlobalRelease)
+      window.removeEventListener("mouseup", handleGlobalRelease)
+      window.removeEventListener("touchend", handleGlobalRelease)
+      window.removeEventListener("touchcancel", handleGlobalRelease)
       if (holdTimerRef.current) clearInterval(holdTimerRef.current)
       if (decayTimerRef.current) clearInterval(decayTimerRef.current)
       if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
         void audioCtxRef.current.close()
       }
     }
-  }, [])
+  }, [booting, holding])
 
   const mobileMenuItems = dashboardMenuItems.map((item) => ({
     id: item.id,
@@ -2042,8 +2065,14 @@ export default function Dashboard() {
               className={cn("fingerprint-btn relative mx-auto mt-4 flex h-28 w-28 select-none items-center justify-center rounded-full border border-primary/25 bg-primary/5", holding && "is-holding")}
               onPointerDown={startHold}
               onPointerUp={endHold}
-              onPointerLeave={endHold}
               onPointerCancel={endHold}
+              onTouchStart={startHold}
+              onTouchEnd={endHold}
+              onTouchCancel={endHold}
+              onMouseDown={startHold}
+              onMouseUp={endHold}
+              onMouseLeave={endHold}
+              onContextMenu={(event) => event.preventDefault()}
             >
               <div className="absolute inset-2 rounded-full border border-primary/20" />
 
