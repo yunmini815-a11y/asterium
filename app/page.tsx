@@ -11,7 +11,80 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Globe, Shield, Lock, FileText, Users, AlertTriangle, Fingerprint, Sparkles, ChevronRight, X } from "lucide-react"
 
-function WorldviewPanel() {
+function GlassShatterOverlay({ active }: { active: boolean }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  if (!active || !mounted) return null
+
+  const segments = Array.from({ length: 8 }, (_, i) => {
+    const angle = -90 + i * 45
+    const radians = (angle * Math.PI) / 180
+    const radius = 10.8
+    const cx = 50 + Math.cos(radians) * radius
+    const cy = 50 + Math.sin(radians) * radius
+    const drift = i % 2 === 0 ? 9.5 : 12
+    const tx1 = Math.cos(radians) * drift
+    const ty1 = Math.sin(radians) * drift
+
+    return (
+      <div
+        key={i}
+        className="glass-segment"
+        style={{
+          left: `${cx}%`,
+          top: `${cy}%`,
+          "--segment-rot": `${angle + 90}deg`,
+          "--segment-rot-end": `${angle + 112}deg`,
+          "--segment-tx": `${tx1}vmin`,
+          "--segment-ty": `${ty1}vmin`,
+          animationDelay: `${i * 18}ms`,
+          animationDuration: `${460 + i * 18}ms`,
+        } as CSSProperties}
+      />
+    )
+  })
+
+  const brackets = [
+    { left: "calc(50% - 10.5vmin)", top: "calc(50% - 10.5vmin)", rotate: "0deg" },
+    { left: "calc(50% + 10.5vmin)", top: "calc(50% - 10.5vmin)", rotate: "90deg" },
+    { left: "calc(50% + 10.5vmin)", top: "calc(50% + 10.5vmin)", rotate: "180deg" },
+    { left: "calc(50% - 10.5vmin)", top: "calc(50% + 10.5vmin)", rotate: "270deg" },
+  ]
+
+  return createPortal(
+    <div className="glass-shatter-overlay" aria-hidden>
+      <div className="glass-bio-core">
+        <div className="glass-bio-ring glass-bio-ring-outer" />
+        <div className="glass-bio-ring glass-bio-ring-mid" />
+        <div className="glass-bio-ring glass-bio-ring-inner" />
+        <div className="glass-bio-grid" />
+        <div className="glass-bio-scan-beam" />
+      </div>
+      {brackets.map((bracket, index) => (
+        <div
+          key={index}
+          className="glass-bio-bracket"
+          style={{
+            left: bracket.left,
+            top: bracket.top,
+            "--bracket-rot": bracket.rotate,
+            animationDelay: `${index * 16}ms`,
+          } as CSSProperties}
+        />
+      ))}
+      <div className="glass-core-pulse" />
+      <div className="glass-impact-flash" />
+      <div className="glass-refraction-halo" />
+      <div className="glass-shockwave-1" />
+      <div className="glass-data-shear" />
+      {segments}
+    </div>,
+    document.body
+  )
+}
+
+function WorldviewPanel({ introActive = false, aftermathActive = false }: { introActive?: boolean; aftermathActive?: boolean }) {
   const worldviewData = [
     { label: "등록된 세계", value: "147", change: "+3" },
     { label: "관측 중인 이상현상", value: "23", change: "+1" },
@@ -19,7 +92,40 @@ function WorldviewPanel() {
   ]
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4 sm:p-6 lg:overflow-hidden">
+    <div
+      className={cn(
+        "worldview-vault relative flex h-full min-h-0 flex-col overflow-y-auto p-4 sm:p-6 lg:overflow-hidden",
+        introActive && "worldview-intro-live",
+        aftermathActive && "worldview-afterglow-live"
+      )}
+    >
+      <div
+        aria-hidden
+        className={cn(
+          "worldview-intro-overlay pointer-events-none absolute inset-0 z-20 transition-opacity duration-500",
+          introActive ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <div className="worldview-intro-backdrop absolute inset-0" />
+        <div className="worldview-intro-panel absolute inset-x-4 top-4 overflow-hidden rounded-[1.5rem] border border-sky-300/20 px-5 py-5 sm:inset-x-6 sm:top-6 sm:px-6 sm:py-6">
+          <div className="worldview-intro-stars absolute inset-0" />
+          <div className="worldview-intro-orbit worldview-intro-orbit-a absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full" />
+          <div className="worldview-intro-orbit worldview-intro-orbit-b absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full" />
+          <div className="worldview-intro-scan absolute inset-x-0 top-0 h-full" />
+          <div className="worldview-intro-grid absolute inset-0" />
+          <p className="worldview-intro-kicker text-[10px] tracking-[0.32em] text-sky-200/80">OBSERVATION ARRAY SYNCHRONIZED</p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="worldview-intro-title text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">관측 좌표를 전개합니다.</p>
+              <p className="worldview-intro-summary mt-2 max-w-xl text-sm leading-6 text-slate-200/70">세계선, 게이트, 이상현상 좌표를 성도처럼 재구성해 열람 영역을 활성화합니다.</p>
+            </div>
+            <div className="rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[10px] tracking-[0.22em] text-sky-100/80">
+              STAR MAP ONLINE
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-5 sm:mb-6">
         <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
           <Globe className="h-5 w-5 text-primary" />
@@ -1088,7 +1194,7 @@ function AuditPanel({
   )
 }
 
-function ArchivePanel() {
+function ArchivePanel({ introActive = false, aftermathActive = false }: { introActive?: boolean; aftermathActive?: boolean }) {
   const documents = [
     {
       id: "DOC-2847",
@@ -1339,7 +1445,113 @@ function ArchivePanel() {
   }
 
   return (
-    <div className="flex h-full flex-col p-4 sm:p-6">
+    <div
+      className={cn(
+        "archive-vault relative flex h-full flex-col p-4 sm:p-6",
+        introActive && "archive-intro-live",
+        aftermathActive && "archive-afterglow-live"
+      )}
+    >
+      <div
+        aria-hidden
+        className={cn(
+          "archive-intro-overlay pointer-events-none absolute inset-0 z-20 transition-opacity duration-500",
+          introActive ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <div className="archive-intro-backdrop absolute inset-0" />
+        <div className="archive-intro-panel isolate absolute inset-x-4 top-4 overflow-hidden rounded-[1.5rem] border border-amber-200/20 px-5 py-5 sm:inset-x-6 sm:top-6 sm:px-6 sm:py-6">
+          <div className="archive-intro-vault absolute inset-x-4 top-4 h-[10.5rem] sm:inset-x-6 sm:top-5 sm:h-[12rem]">
+            <div className="archive-intro-core absolute inset-[12%] rounded-[1.35rem]">
+              <div className="archive-intro-chamber absolute inset-[11%] rounded-[1rem]" />
+              <div className="archive-intro-shelves absolute inset-x-[18%] top-[18%] bottom-[18%] flex flex-col justify-between">
+                <span className="archive-intro-shelf" />
+                <span className="archive-intro-shelf" />
+                <span className="archive-intro-shelf" />
+              </div>
+            </div>
+            <div className="archive-intro-spine absolute left-1/2 top-[12%] h-[76%] w-[8%] -translate-x-1/2 rounded-full" />
+            <div className="archive-intro-lock absolute left-1/2 top-1/2 z-[3] h-[4.9rem] w-[4.9rem] -translate-x-1/2 -translate-y-1/2 sm:h-[5.6rem] sm:w-[5.6rem]">
+              <div className="archive-intro-lock-assembly relative h-full w-full">
+                <div className="archive-intro-seal-orbit absolute inset-[-12%] rounded-full" />
+                <div className="archive-intro-seal-glyph absolute inset-[6%] rounded-full">
+                  <span className="archive-intro-seal-line archive-intro-seal-line-a" />
+                  <span className="archive-intro-seal-line archive-intro-seal-line-b" />
+                  <span className="archive-intro-seal-line archive-intro-seal-line-c" />
+                  <span className="archive-intro-seal-line archive-intro-seal-line-d" />
+                </div>
+                <div className="archive-intro-lock-ring absolute inset-0 rounded-full" />
+                <div className="archive-intro-lock-core absolute inset-[22%] rounded-full" />
+                <div className="archive-intro-lock-scan absolute inset-x-[24%] top-1/2 h-[2px] -translate-y-1/2 rounded-full" />
+              </div>
+            </div>
+            <div className="archive-intro-door archive-intro-door-left absolute inset-y-[10%] left-[8%] w-[42%] rounded-[1.2rem]">
+              <div className="archive-intro-door-label absolute left-4 top-4 text-[9px] tracking-[0.22em] text-amber-50/55 sm:left-5 sm:top-5">VAULT GATE A</div>
+              <div className="archive-intro-wheel absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full sm:h-16 sm:w-16" />
+            </div>
+            <div className="archive-intro-door archive-intro-door-right absolute inset-y-[10%] right-[8%] w-[42%] rounded-[1.2rem]">
+              <div className="archive-intro-door-label absolute right-4 top-4 text-[9px] tracking-[0.22em] text-amber-50/55 sm:right-5 sm:top-5">VAULT GATE B</div>
+              <div className="archive-intro-bolts absolute inset-y-[22%] left-5 flex flex-col justify-between sm:left-6">
+                <span className="archive-intro-bolt" />
+                <span className="archive-intro-bolt" />
+                <span className="archive-intro-bolt" />
+              </div>
+            </div>
+          </div>
+          <div className="archive-intro-index absolute inset-0" />
+          <div className="archive-intro-scan absolute inset-x-0 top-0 h-full" />
+          <div className="archive-intro-seal absolute right-5 top-5 rounded-full border border-amber-200/20 px-3 py-1 text-[10px] tracking-[0.22em] text-amber-100/80 sm:right-6 sm:top-6">
+            LEVEL SIGMA
+          </div>
+          <p className="archive-intro-kicker relative z-[1] pt-[9.25rem] text-[10px] tracking-[0.32em] text-amber-100/75 sm:pt-[10.5rem]">VAULT INDEX DECLASSIFICATION</p>
+          <div className="relative z-[1] mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="archive-intro-title text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">보관소 서가를 재정렬합니다.</p>
+              <p className="archive-intro-summary mt-2 max-w-xl text-sm leading-6 text-amber-50/70">문서 봉인 등급과 기록 인덱스를 한 번 더 검증한 뒤 열람 슬롯을 개방합니다.</p>
+            </div>
+            <div className="rounded-full border border-amber-200/20 bg-amber-300/10 px-3 py-1 text-[10px] tracking-[0.22em] text-amber-100/80">
+              INDEXING RECORDS
+            </div>
+          </div>
+
+          <div className="archive-intro-rail mt-5 grid gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] sm:gap-3">
+            <div className="archive-intro-slots grid gap-2 sm:grid-cols-3">
+              {[
+                ["01", "SEAL CHECK", "봉인 등급 검증"],
+                ["02", "LEDGER TRACE", "열람 경로 대조"],
+                ["03", "SHELF UNLOCK", "서가 슬롯 개방"],
+              ].map(([code, title, detail]) => (
+                <div key={code} className={`archive-intro-slot archive-intro-slot-step-${code} rounded-[1rem] border border-white/10 bg-black/18 px-3.5 py-3.5`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-[10px] tracking-[0.18em] text-amber-100/85">{code}</span>
+                    <span className="text-[9px] tracking-[0.16em] text-amber-50/55">{title}</span>
+                  </div>
+                  <div className="archive-intro-slot-bar mt-3 h-[3px] overflow-hidden rounded-full bg-white/8">
+                    <span className="archive-intro-slot-fill block h-full rounded-full bg-gradient-to-r from-amber-300 via-amber-100 to-white" />
+                  </div>
+                  <p className="mt-3 text-[11px] leading-5 text-amber-50/80">{detail}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="archive-intro-ledger rounded-[1rem] border border-amber-200/12 bg-black/18 px-3.5 py-3.5">
+              <p className="text-[10px] tracking-[0.2em] text-amber-100/70">RECORD PATH</p>
+              <div className="mt-3 space-y-2.5">
+                {[
+                  "CLASSIFIED STACK A-13",
+                  "AUTHORIZED BY LUMINANCE",
+                  "CROSSCHECK: LEDGER / ACCESS / SEAL",
+                ].map((line) => (
+                  <div key={line} className="archive-intro-ledger-line rounded-lg border border-white/8 px-3 py-2 text-[10px] tracking-[0.15em] text-amber-50/78">
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-5 sm:mb-6">
         <h2 className="flex items-center gap-3 text-base font-semibold text-foreground sm:text-lg">
           <Lock className="h-5 w-5 text-primary" />
@@ -1494,16 +1706,69 @@ export default function Dashboard() {
   const [activeMenu, setActiveMenu] = useState("chat")
   const [introReady, setIntroReady] = useState(false)
   const [booting, setBooting] = useState(true)
-  const [scanProgress, setScanProgress] = useState(0)
+  const [bootShattering, setBootShattering] = useState(false)
+  const [worldviewIntroActive, setWorldviewIntroActive] = useState(false)
+  const [worldviewAfterglowActive, setWorldviewAfterglowActive] = useState(false)
+  const [archiveIntroActive, setArchiveIntroActive] = useState(false)
+  const [archiveAfterglowActive, setArchiveAfterglowActive] = useState(false)
   const [auditIntroActive, setAuditIntroActive] = useState(false)
   const [auditIntroStage, setAuditIntroStage] = useState(0)
   const [auditAfterglowActive, setAuditAfterglowActive] = useState(false)
+  const [glassShatter, setGlassShatter] = useState(false)
   const previousMenuRef = useRef(activeMenu)
 
   useEffect(() => {
     const previousMenu = previousMenuRef.current
     previousMenuRef.current = activeMenu
     const compactMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches
+
+    if (activeMenu !== "worldview") {
+      setWorldviewIntroActive(false)
+      setWorldviewAfterglowActive(false)
+    }
+
+    if (activeMenu !== "archive") {
+      setArchiveIntroActive(false)
+      setArchiveAfterglowActive(false)
+    }
+
+    if (activeMenu === "worldview" && previousMenu !== "worldview") {
+      setWorldviewIntroActive(true)
+      setWorldviewAfterglowActive(false)
+
+      const glowTimer = setTimeout(() => {
+        setWorldviewAfterglowActive(true)
+      }, compactMobile ? 700 : 1220)
+
+      const closeTimer = setTimeout(() => {
+        setWorldviewIntroActive(false)
+        setWorldviewAfterglowActive(false)
+      }, compactMobile ? 1500 : 2550)
+
+      return () => {
+        clearTimeout(glowTimer)
+        clearTimeout(closeTimer)
+      }
+    }
+
+    if (activeMenu === "archive" && previousMenu !== "archive") {
+      setArchiveIntroActive(true)
+      setArchiveAfterglowActive(false)
+
+      const glowTimer = setTimeout(() => {
+        setArchiveAfterglowActive(true)
+      }, compactMobile ? 760 : 1320)
+
+      const closeTimer = setTimeout(() => {
+        setArchiveIntroActive(false)
+        setArchiveAfterglowActive(false)
+      }, compactMobile ? 1560 : 2660)
+
+      return () => {
+        clearTimeout(glowTimer)
+        clearTimeout(closeTimer)
+      }
+    }
 
     if (activeMenu !== "audit") {
       setAuditIntroActive(false)
@@ -1553,71 +1818,180 @@ export default function Dashboard() {
     }
   }, [activeMenu])
 
-  useEffect(() => {
-    let audioCtx: AudioContext | null = null
-    const milestonePlayed = new Set<number>()
+  // ── 오디오 ────────────────────────────────────────────────────
+  const audioCtxRef = useRef<AudioContext | null>(null)
 
-    const playTone = (frequency: number, durationMs: number, volume = 0.018) => {
-      try {
-        const AudioContextCtor: typeof AudioContext | undefined =
-          window.AudioContext ??
-          (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  const getAudioCtx = () => {
+    try {
+      const Ctor: typeof AudioContext | undefined =
+        window.AudioContext ??
+        (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!Ctor) return null
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctor()
+      if (audioCtxRef.current.state === "suspended") void audioCtxRef.current.resume()
+      return audioCtxRef.current
+    } catch { return null }
+  }
 
-        if (!AudioContextCtor) return
-        if (!audioCtx) audioCtx = new AudioContextCtor()
-        if (audioCtx.state === "suspended") {
-          void audioCtx.resume()
-        }
+  const playTone = (frequency: number, durationMs: number, volume = 0.018) => {
+    const ctx = getAudioCtx()
+    if (!ctx) return
+    try {
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = "sine"
+      osc.frequency.value = frequency
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now)
+      osc.stop(now + durationMs / 1000 + 0.01)
+    } catch { /* 무시 */ }
+  }
 
-        const oscillator = audioCtx.createOscillator()
-        const gainNode = audioCtx.createGain()
-
-        oscillator.type = "sine"
-        oscillator.frequency.value = frequency
-        gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + 0.01)
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + durationMs / 1000)
-
-        oscillator.connect(gainNode)
-        gainNode.connect(audioCtx.destination)
-
-        oscillator.start(audioCtx.currentTime)
-        oscillator.stop(audioCtx.currentTime + durationMs / 1000 + 0.01)
-      } catch {
-        // 모바일 자동재생 제한 등으로 실패해도 UI 흐름은 유지한다.
+  const playGlassShatter = () => {
+    const ctx = getAudioCtx()
+    if (!ctx) return
+    try {
+      const now = ctx.currentTime
+      const bufferSize = ctx.sampleRate * 0.28
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+      const data = noiseBuffer.getChannelData(0)
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize) ** 1.6
       }
+      const noiseSource = ctx.createBufferSource()
+      noiseSource.buffer = noiseBuffer
+      const hpf = ctx.createBiquadFilter()
+      hpf.type = "highpass"
+      hpf.frequency.value = 3200
+      hpf.Q.value = 0.8
+      const bpf = ctx.createBiquadFilter()
+      bpf.type = "bandpass"
+      bpf.frequency.value = 6800
+      bpf.Q.value = 2.2
+      const noiseGain = ctx.createGain()
+      noiseGain.gain.setValueAtTime(0.0001, now)
+      noiseGain.gain.exponentialRampToValueAtTime(0.38, now + 0.008)
+      noiseGain.gain.exponentialRampToValueAtTime(0.12, now + 0.06)
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28)
+      noiseSource.connect(hpf)
+      hpf.connect(bpf)
+      bpf.connect(noiseGain)
+      noiseGain.connect(ctx.destination)
+      noiseSource.start(now)
+      ;[2200, 3100, 4400, 1800].forEach((freq, i) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = "sine"
+        osc.frequency.value = freq
+        gain.gain.setValueAtTime(0.0001, now + i * 0.012)
+        gain.gain.exponentialRampToValueAtTime(0.022, now + i * 0.012 + 0.004)
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.012 + 0.055)
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start(now + i * 0.012)
+        osc.stop(now + i * 0.012 + 0.08)
+      })
+      for (let i = 0; i < 6; i++) {
+        const d = 0.06 + i * 0.055 + Math.random() * 0.04
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = "sine"
+        osc.frequency.value = 1400 + Math.random() * 1800
+        gain.gain.setValueAtTime(0.0001, now + d)
+        gain.gain.exponentialRampToValueAtTime(0.014, now + d + 0.003)
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + d + 0.055)
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start(now + d)
+        osc.stop(now + d + 0.08)
+      }
+    } catch { /* 무시 */ }
+  }
+
+  // ── 지문 홀드 입력 ────────────────────────────────────────────
+  const [holding, setHolding] = useState(false)
+  const [holdProgress, setHoldProgress] = useState(0)
+  const [holdDone, setHoldDone] = useState(false)
+  const holdTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const holdProgressRef = useRef(0)
+  const milestonePlayed = useRef(new Set<number>())
+  const decayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const HOLD_DURATION_MS = 1400
+  const DECAY_RATE = 4
+
+  const startHold = () => {
+    if (holdDone) return
+    if (decayTimerRef.current) {
+      clearInterval(decayTimerRef.current)
+      decayTimerRef.current = null
     }
+    // 사용자 제스처 안에서 AudioContext 초기화
+    getAudioCtx()
+    setHolding(true)
 
-    const durationMs = 1150
-    const tickMs = 30
-    let elapsed = 0
+    holdTimerRef.current = setInterval(() => {
+      holdProgressRef.current = Math.min(100, holdProgressRef.current + (100 / (HOLD_DURATION_MS / 30)))
+      const p = Math.round(holdProgressRef.current)
+      setHoldProgress(p)
 
-    const timer = setInterval(() => {
-      elapsed += tickMs
-      const progress = Math.min(100, Math.round((elapsed / durationMs) * 100))
-      setScanProgress(progress)
-
-       const milestones = [25, 50, 75]
-       for (const milestone of milestones) {
-        if (progress >= milestone && !milestonePlayed.has(milestone)) {
-          milestonePlayed.add(milestone)
+      for (const milestone of [25, 50, 75]) {
+        if (p >= milestone && !milestonePlayed.current.has(milestone)) {
+          milestonePlayed.current.add(milestone)
           playTone(680 + milestone * 4, 55)
         }
       }
 
-      if (elapsed >= durationMs) {
-        clearInterval(timer)
+      if (holdProgressRef.current >= 100) {
+        clearInterval(holdTimerRef.current!)
+        holdTimerRef.current = null
+        setHoldDone(true)
+        setHolding(false)
         playTone(1040, 80, 0.02)
         setTimeout(() => playTone(1320, 120, 0.02), 90)
-        setBooting(false)
-        requestAnimationFrame(() => setIntroReady(true))
+        playGlassShatter()
+        setBootShattering(true)
+        setGlassShatter(true)
+        setTimeout(() => {
+          setBooting(false)
+          setBootShattering(false)
+          requestAnimationFrame(() => setIntroReady(true))
+        }, 300)
+        setTimeout(() => setGlassShatter(false), 1300)
       }
-    }, tickMs)
+    }, 30)
+  }
 
+  const endHold = () => {
+    if (holdDone) return
+    if (holdTimerRef.current) {
+      clearInterval(holdTimerRef.current)
+      holdTimerRef.current = null
+    }
+    setHolding(false)
+    decayTimerRef.current = setInterval(() => {
+      holdProgressRef.current = Math.max(0, holdProgressRef.current - DECAY_RATE)
+      const p = Math.round(holdProgressRef.current)
+      setHoldProgress(p)
+      if (holdProgressRef.current <= 0) {
+        clearInterval(decayTimerRef.current!)
+        decayTimerRef.current = null
+        milestonePlayed.current.clear()
+      }
+    }, 30)
+  }
+
+  useEffect(() => {
     return () => {
-      clearInterval(timer)
-      if (audioCtx && audioCtx.state !== "closed") {
-        void audioCtx.close()
+      if (holdTimerRef.current) clearInterval(holdTimerRef.current)
+      if (decayTimerRef.current) clearInterval(decayTimerRef.current)
+      if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+        void audioCtxRef.current.close()
       }
     }
   }, [])
@@ -1638,11 +2012,11 @@ export default function Dashboard() {
   const renderContent = () => {
     switch (activeMenu) {
       case "worldview":
-        return <WorldviewPanel />
+        return <WorldviewPanel introActive={worldviewIntroActive} aftermathActive={worldviewAfterglowActive} />
       case "audit":
         return <AuditPanel introActive={auditIntroActive} introStage={auditIntroStage} aftermathActive={auditAfterglowActive} />
       case "archive":
-        return <ArchivePanel />
+        return <ArchivePanel introActive={archiveIntroActive} aftermathActive={archiveAfterglowActive} />
       default:
         return <ChatInterface />
     }
@@ -1651,42 +2025,80 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen w-full items-stretch p-2 sm:p-4">
       <div
-        aria-hidden
         className={cn(
-          "pointer-events-none fixed inset-0 z-40 transition-opacity duration-500",
-          booting ? "opacity-100" : "opacity-0"
+          "fixed inset-0 z-40",
+          bootShattering
+            ? "boot-shattering pointer-events-none"
+            : "transition-opacity duration-500 " + (booting ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0")
         )}
       >
         <div className="absolute inset-0 bg-background/90 backdrop-blur-[2px]" />
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <div className="w-full max-w-xs rounded-2xl border border-primary/30 bg-card/85 p-5 shadow-2xl shadow-primary/20">
             <p className="text-center text-[10px] tracking-[0.28em] text-muted-foreground">BIOMETRIC AUTH</p>
-            <div className="relative mx-auto mt-4 flex h-28 w-28 items-center justify-center rounded-full border border-primary/25 bg-primary/5">
+
+            {/* 지문 홀드 버튼 */}
+            <div
+              className={cn("fingerprint-btn relative mx-auto mt-4 flex h-28 w-28 select-none items-center justify-center rounded-full border border-primary/25 bg-primary/5", holding && "is-holding")}
+              onPointerDown={startHold}
+              onPointerUp={endHold}
+              onPointerLeave={endHold}
+              onPointerCancel={endHold}
+            >
               <div className="absolute inset-2 rounded-full border border-primary/20" />
-              <Fingerprint className="h-12 w-12 text-primary/85" />
-              <span
-                className="absolute left-3 right-3 h-[2px] rounded-full bg-primary/80 shadow-[0_0_12px_rgba(56,189,248,0.55)] transition-all duration-150"
-                style={{ top: `${10 + scanProgress * 0.76}%` }}
+
+              {/* 홀드 진행 링 */}
+              <div
+                className={cn("fingerprint-ring absolute inset-0 rounded-full", holding && "is-holding", holdDone && "is-complete")}
+                style={{ "--fp-progress": holdProgress } as React.CSSProperties}
               />
+
+              {/* 리플 애니메이션 */}
+              {holding && <div className="fingerprint-ripple absolute inset-0 rounded-full" />}
+
+              <Fingerprint
+                className={cn(
+                  "h-12 w-12 text-primary/85 transition-transform",
+                  holding && "fingerprint-icon-holding",
+                  holdDone && "fingerprint-icon-complete"
+                )}
+              />
+
+              {/* 스캔 라인 */}
+              {!holdDone && (
+                <span
+                  className="absolute left-3 right-3 h-[2px] rounded-full bg-primary/80 shadow-[0_0_12px_rgba(56,189,248,0.55)] transition-all duration-150"
+                  style={{ top: `${10 + holdProgress * 0.76}%` }}
+                />
+              )}
             </div>
+
             <div className="mt-4">
               <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
                 <div
                   className="h-full rounded-full bg-primary transition-all duration-150"
-                  style={{ width: `${scanProgress}%` }}
+                  style={{ width: `${holdProgress}%` }}
                 />
               </div>
               <div className="mt-2 flex items-center justify-between text-[10px] tracking-wider text-muted-foreground">
                 <span>SCAN</span>
-                <span>{scanProgress}%</span>
+                <span>{holdProgress}%</span>
               </div>
               <p className="mt-2 text-center text-[10px] tracking-[0.18em] text-primary/90">
-                {scanProgress < 100 ? "FINGERPRINT VERIFYING" : "ACCESS GRANTED"}
+                {holdDone
+                  ? "ACCESS GRANTED"
+                  : holding
+                  ? "VERIFYING..."
+                  : holdProgress > 0
+                  ? "KEEP HOLDING"
+                  : "HOLD TO AUTHENTICATE"}
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      <GlassShatterOverlay active={glassShatter} />
 
       <div
         className={cn(

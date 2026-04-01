@@ -1447,45 +1447,54 @@ interface QuickQuery {
   mobileLabel: string
 }
 
-const DEFAULT_QUICK_QUERIES = ["도움말", "엘모라", "녹타르", "뤼네", "네메시스", "마나", "협회 목록", "월식령"]
+const DEFAULT_QUICK_QUERIES = ["도움말", "엘모라", "녹타르", "네메시스", "뤼네", "서고", "마나", "월식령"]
 
 const QUICK_QUERY_LABELS: Record<string, string> = {
-  "도움말": "ENTRY // 도움말",
-  "엘모라": "LUMEN // 엘모라",
-  "녹타르": "SHADOW // 녹타르",
-  "뤼네": "RUINAE // 뤼네",
-  "네메시스": "NEMESIS // 네메시스",
-  "마나": "ARCANE // 마나",
-  "협회 목록": "INDEX // 협회 목록",
-  "월식령": "ECLIPSE // 월식령",
-  "엘모라 상세": "LUMEN DOSSIER // 엘모라 상세",
+  "도움말": "GUIDE // 도움말",
+  "엘모라": "CITY DOSSIER // 엘모라",
+  "녹타르": "SHADOW DOSSIER // 녹타르",
+  "뤼네": "RUINÆ FILE // 뤼네",
+  "네메시스": "NEMESIS FILE // 네메시스",
+  "마나": "ARCANE BRIEF // 마나",
+  "협회 목록": "FACTION INDEX // 협회 목록",
+  "월식령": "ECLIPSE EDICT // 월식령",
+  "엘모라 상세": "CITY DOSSIER+ // 엘모라 상세",
   "에클리시아": "CAPITAL NODE // 에클리시아",
+  "인덱시리온": "ARCHIVE DISTRICT // 인덱시리온",
+  "팬텀마이어": "DUSK FRONTIER // 팬텀마이어",
+  "세인츠포드": "INDUSTRIAL BELT // 세인츠포드",
+  "프라가라흐": "NORTHERN WALL // 프라가라흐",
   "워프게이트": "TRANSIT GATE // 워프게이트",
-  "샤텐라우그": "CORE DEVICE // 샤텐라우그",
-  "월식": "ECLIPSE // 월식",
-  "녹타르 상세": "SHADOW DOSSIER // 녹타르 상세",
-  "호라이즌": "UPPER ZONE // 호라이즌",
-  "에스카톤": "LOWER ZONE // 에스카톤",
+  "샤텐라우그": "LUNAR ENGINE // 샤텐라우그",
+  "월식": "ECLIPSE ORDER // 월식",
+  "녹타르 상세": "NOKTAR DOSSIER+ // 녹타르 상세",
+  "호라이즌": "SURFACE ZONE // 호라이즌",
+  "에스카톤": "UNDER ZONE // 에스카톤",
   "암시장": "BLACK MARKET // 암시장",
-  "뤼네 상세": "RUINAE DOSSIER // 뤼네 상세",
-  "파타르키아 뤼네": "PEITHARCHIA // 파타르키아 뤼네",
-  "타뷸라 뤼네": "TABULA // 타뷸라 뤼네",
-  "뤼네 EDEN": "MEDIC LINE // 뤼네 EDEN",
-  "네메시스 상세": "NEMESIS DOSSIER // 네메시스 상세",
+  "뤼네 상세": "RUINÆ DOSSIER+ // 뤼네 상세",
+  "파타르키아 뤼네": "RUINÆ CODE // 파타르키아 뤼네",
+  "타뷸라 뤼네": "TABULA FILE // 타뷸라 뤼네",
+  "뤼네 EDEN": "EDEN MEDIC // 뤼네 EDEN",
+  "네메시스 상세": "NEMESIS DOSSIER+ // 네메시스 상세",
+  "네메시스 조직도 상세": "NEMESIS CHAIN // 조직도 상세",
   "카사 프리마": "CAUSE PRIMA // 카사 프리마",
-  "멘토": "CHAIN SYSTEM // 멘토",
-  "피라미드 의식": "RITUAL // 피라미드 의식",
-  "마나 상세": "ARCANE DOSSIER // 마나 상세",
-  "제논": "XENON // 제논",
-  "절대성": "ABSOLUTENESS // 절대성",
+  "멘토": "MENTOR CHAIN // 멘토",
+  "멘토/멘티 전환 조건": "MENTOR SHIFT // 전환 조건",
+  "피라미드 의식": "RITUAL CORE // 피라미드 의식",
+  "피라미드 의식 절차": "RITUAL STEPS // 의식 절차",
+  "마나 상세": "ARCANE DOSSIER+ // 마나 상세",
+  "제논": "XENON CORE // 제논",
+  "절대성": "POWER SCALE // 절대성",
   "마나 사용자 등급 제도": "RANK FRAME // 등급 제도",
   "마나 사용자 등급": "RANK TABLE // 사용자 등급",
   "플뤼겔": "GRAY ZONE // 플뤼겔",
-  "서광": "LUMINANCE // 서광",
-  "황혼": "TWILIGHT // 황혼",
-  "명멸": "NIGHTFALL // 명멸",
-  "여명": "DAYBREAK // 여명",
-  "서고": "ARCHIVE // 서고",
+  "서광": "LUMINANCE ORDER // 서광",
+  "황혼": "TWILIGHT ORDER // 황혼",
+  "명멸": "NIGHTFALL ORDER // 명멸",
+  "여명": "DAYBREAK ORDER // 여명",
+  "서고": "ARCHIVE CORE // 서고",
+  "공방 SOUL": "SOUL FORGE // 공방 SOUL",
+  "어비스": "ABYSS ARMS // 어비스",
 }
 
 function toQuickQueries(queries: string[]): QuickQuery[] {
@@ -1505,20 +1514,32 @@ function getRecommendedQueries(input: string): QuickQuery[] {
     return toQuickQueries(["도움말", "협회 목록", "엘모라 상세", "네메시스 상세", "마나", "월식령"])
   }
 
-  if (lower.includes("엘모라") || lower.includes("에클리시아") || lower.includes("샤텐라우그")) {
-    return toQuickQueries(["엘모라 상세", "에클리시아", "워프게이트", "샤텐라우그", "월식", "협회 목록"])
+  if (
+    lower.includes("엘모라") ||
+    lower.includes("에클리시아") ||
+    lower.includes("인덱시리온") ||
+    lower.includes("팬텀마이어") ||
+    lower.includes("세인츠포드") ||
+    lower.includes("프라가라흐") ||
+    lower.includes("샤텐라우그")
+  ) {
+    return toQuickQueries(["엘모라 상세", "에클리시아", "인덱시리온", "팬텀마이어", "세인츠포드", "프라가라흐", "워프게이트", "샤텐라우그"])
   }
 
   if (lower.includes("녹타르") || lower.includes("호라이즌") || lower.includes("에스카톤")) {
-    return toQuickQueries(["녹타르 상세", "호라이즌", "에스카톤", "암시장", "네메시스", "뤼네"])
+    return toQuickQueries(["녹타르 상세", "네메시스", "뤼네", "호라이즌", "에스카톤", "암시장"])
   }
 
   if (lower.includes("뤼네") || lower.includes("tabula") || lower.includes("타뷸라")) {
-    return toQuickQueries(["뤼네 상세", "파타르키아 뤼네", "타뷸라 뤼네", "뤼네 EDEN", "네메시스", "녹타르 상세"])
+    return toQuickQueries(["뤼네 상세", "파타르키아 뤼네", "타뷸라 뤼네", "뤼네 EDEN"])
   }
 
   if (lower.includes("네메시스") || lower.includes("멘토") || lower.includes("피라미드")) {
-    return toQuickQueries(["네메시스 상세", "카사 프리마", "멘토", "피라미드 의식", "녹타르 상세", "뤼네"])
+    return toQuickQueries(["네메시스 상세", "네메시스 조직도 상세", "카사 프리마", "멘토/멘티 전환 조건", "피라미드 의식 절차"])
+  }
+
+  if (lower.includes("소울") || lower.includes("어비스") || lower.includes("abyss")) {
+    return toQuickQueries(["공방 SOUL", "어비스", "녹타르 상세", "네메시스", "뤼네", "암시장"])
   }
 
   if (lower.includes("마나") || lower.includes("제논") || lower.includes("절대성") || lower.includes("등급")) {
@@ -1532,13 +1553,23 @@ function getRecommendedQueries(input: string): QuickQuery[] {
   const searchable = [
     ...DEFAULT_QUICK_QUERIES,
     "엘모라 상세",
+    "에클리시아",
+    "인덱시리온",
+    "팬텀마이어",
+    "세인츠포드",
+    "프라가라흐",
+    "워프게이트",
+    "샤텐라우그",
     "녹타르 상세",
     "뤼네 상세",
     "파타르키아 뤼네",
     "타뷸라 뤼네",
     "네메시스 상세",
+    "네메시스 조직도 상세",
     "공방 SOUL",
     "어비스",
+    "멘토/멘티 전환 조건",
+    "피라미드 의식 절차",
     "플뤼겔",
     "제논",
     "절대성",
@@ -1559,24 +1590,52 @@ function getRecommendedQueries(input: string): QuickQuery[] {
 function getRelatedQueries(text: string): string[] {
   const lower = text.toLowerCase()
 
+  if (text.includes("[아카식레코드: 뤼네 · 전체 기록]") || text.includes("[아카식레코드: 뤼네 · 녹타르 양대축]")) {
+    return ["뤼네 상세", "파타르키아 뤼네", "타뷸라 뤼네"]
+  }
+
+  if (text.includes("[아카식레코드: 파타르키아 뤼네 · Peitharchia Ruinæ]")) {
+    return ["뤼네 상세", "타뷸라 뤼네", "뤼네 EDEN"]
+  }
+
+  if (text.includes("[아카식레코드: 타뷸라 뤼네 · Tabula Ruinæ]")) {
+    return ["뤼네 상세", "파타르키아 뤼네", "뤼네 EDEN"]
+  }
+
+  if (text.includes("[아카식레코드: 네메시스 · 전체 기록]") || text.includes("[아카식레코드: 네메시스 · 녹타르 양대축]")) {
+    return ["네메시스 상세", "네메시스 조직도 상세", "카사 프리마"]
+  }
+
+  if (text.includes("[아카식레코드: 엘모라 세부 지역 브리핑]") || text.includes("[아카식레코드: 엘모라 요약]")) {
+    return ["엘모라 상세", "에클리시아", "인덱시리온", "워프게이트"]
+  }
+
+  if (text.includes("[아카식레코드: 녹타르 세부 지역 브리핑]") || text.includes("[아카식레코드: 녹타르 요약]")) {
+    return ["녹타르 상세", "호라이즌", "에스카톤", "암시장"]
+  }
+
   if (lower.includes("검색 메뉴얼") || lower.includes("검색이 막막")) {
     return ["엘모라 상세", "네메시스 상세", "타뷸라 뤼네"]
   }
 
+  if (lower.includes("녹타르") || lower.includes("호라이즌") || lower.includes("에스카톤")) {
+    return ["녹타르 상세", "네메시스", "뤼네"]
+  }
+
   if (lower.includes("뤼네")) {
-    return ["파타르키아 뤼네", "타뷸라 뤼네", "뤼네 EDEN"]
+    return ["뤼네 상세", "파타르키아 뤼네", "타뷸라 뤼네"]
   }
 
   if (lower.includes("네메시스")) {
-    return ["네메시스 상세", "멘토", "피라미드 의식"]
+    return ["네메시스 상세", "카사 프리마", "피라미드 의식 절차"]
   }
 
-  if (lower.includes("엘모라")) {
-    return ["엘모라 상세", "에클리시아", "월식"]
+  if (lower.includes("엘모라") || lower.includes("에클리시아") || lower.includes("샤텐라우그")) {
+    return ["엘모라 상세", "에클리시아", "워프게이트", "샤텐라우그"]
   }
 
-  if (lower.includes("녹타르")) {
-    return ["녹타르 상세", "호라이즌", "에스카톤"]
+  if (lower.includes("인덱시리온") || lower.includes("팬텀마이어") || lower.includes("세인츠포드") || lower.includes("프라가라흐")) {
+    return ["엘모라 상세", "에클리시아", "워프게이트", "샤텐라우그"]
   }
 
   if (lower.includes("소울") || lower.includes("abyss") || lower.includes("어비스")) {
